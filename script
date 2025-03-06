@@ -16,7 +16,9 @@ local Config = {
         AlcanceMaximo = 800,
         MiraNaCabeca = true,
         SuavizacaoMovimento = true,
-        AtualizacaoDelay = 0.01 -- Aumenta a frequência de atualização
+        AtualizacaoDelay = 0.01, -- Aumenta a frequência de atualização
+        AjusteDeAngulo = 0.2, -- Novo parâmetro para ajuste de ângulo
+        SilentAim = true -- Novo parâmetro para Silent Aim
     }
 }
 
@@ -34,15 +36,15 @@ local function desenharESP(jogador)
             end
         end
         
-        -- Cria o contorno (box ESP) com bordas arredondadas
-        local caixa = Instance.new("BoxHandleAdornment")
-        caixa.Size = Config.ESP.Tamanho
-        caixa.Adornee = jogador.Character
-        caixa.Color3 = Config.ESP.Cor
-        caixa.AlwaysOnTop = true
-        caixa.ZIndex = 10
-        caixa.Transparency = Config.ESP.Transparencia
-        caixa.Parent = jogador.Character
+        -- Cria uma linha em volta do personagem
+        local contorno = Instance.new("BoxHandleAdornment")
+        contorno.Size = Config.ESP.Tamanho + Vector3.new(0.2, 0.2, 0.2) -- Aumenta o tamanho para criar um contorno
+        contorno.Adornee = jogador.Character
+        contorno.Color3 = Config.ESP.Cor
+        contorno.AlwaysOnTop = true
+        contorno.ZIndex = 10
+        contorno.Transparency = Config.ESP.Transparencia
+        contorno.Parent = jogador.Character
         
         -- Exibe informações do jogador
         if Config.ESP.MostrarNomes and jogador.Character:FindFirstChild("Head") then
@@ -125,13 +127,19 @@ local function aimbot()
                 local framePosicaoAtual = jogadorLocal.Character.HumanoidRootPart.CFrame
                 local frameAlvo = CFrame.new(framePosicaoAtual.Position, alvo)
                 
-                -- Melhorar a suavização do movimento
-                if Config.Aimbot.SuavizacaoMovimento then
-                    local suavizacao = Config.Aimbot.Sensibilidade * (1 / (1 + menorDistancia / Config.Aimbot.AlcanceMaximo))
-                    jogadorLocal.Character.HumanoidRootPart.CFrame = 
-                        framePosicaoAtual:Lerp(frameAlvo, suavizacao)
+                -- Silent Aim
+                if Config.Aimbot.SilentAim then
+                    local anguloAjustado = (alvo - framePosicaoAtual.Position).unit * Config.Aimbot.AjusteDeAngulo
+                    jogadorLocal.Character.HumanoidRootPart.CFrame = CFrame.new(framePosicaoAtual.Position) * CFrame.Angles(0, math.atan2(anguloAjustado.Z, anguloAjustado.X), 0)
                 else
-                    jogadorLocal.Character.HumanoidRootPart.CFrame = frameAlvo
+                    -- Melhorar a suavização do movimento
+                    if Config.Aimbot.SuavizacaoMovimento then
+                        local suavizacao = Config.Aimbot.Sensibilidade * (1 / (1 + menorDistancia / Config.Aimbot.AlcanceMaximo))
+                        jogadorLocal.Character.HumanoidRootPart.CFrame = 
+                            CFrame.new(framePosicaoAtual.Position):Lerp(frameAlvo, suavizacao)
+                    else
+                        jogadorLocal.Character.HumanoidRootPart.CFrame = frameAlvo
+                    end
                 end
             end
         end)
