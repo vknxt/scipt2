@@ -1,28 +1,111 @@
--- Exemplo básico de estrutura para um script ESP no Roblox
+-- Carrega a UI Library
+local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
+local UI = Lib:Create{
+    Theme = "Dark",
+    Size = UDim2.new(0, 600, 0, 450),
+    Title = "Roblox ESP & Aimbot"
+}
+
+-- Cria abas na interface
+local MainTab = UI:Tab{ Name = "Main" }
+local ESPSection = MainTab:Section{ Name = "ESP Settings", Column = 1 }
+local AimbotSection = MainTab:Section{ Name = "Aimbot Settings", Column = 2 }
+
+-- Adiciona um título e descrição
+MainTab:Label{ Text = "Welcome to the ESP & Aimbot Tool" }
+MainTab:Label{ Text = "Customize your settings below:" }
+
+-- Variáveis de controle
+local espEnabled = false
+local aimbotEnabled = false
 
 -- Função para desenhar caixas ao redor dos jogadores
-function drawESP(player)
-    -- Verifica se o jogador é válido e não é o jogador local
+local function drawESP(player)
     if player and player ~= game.Players.LocalPlayer then
-        -- Cria uma nova caixa para o jogador
         local box = Instance.new("BoxHandleAdornment")
-        box.Size = Vector3.new(4, 6, 1) -- Tamanho da caixa
-        box.Adornee = player.Character -- Anexa ao personagem do jogador
-        box.Color3 = Color3.new(1, 0, 0) -- Cor da caixa (vermelho)
-        box.AlwaysOnTop = true -- Sempre visível
-        box.ZIndex = 10 -- Prioridade de renderização
-        box.Parent = game.Workspace -- Adiciona ao Workspace
+        box.Size = Vector3.new(4, 6, 1)
+        box.Adornee = player.Character
+        box.Color3 = Color3.new(0, 1, 0) -- Cor verde para melhor visibilidade
+        box.AlwaysOnTop = true
+        box.ZIndex = 10
+        box.Parent = game.Workspace
     end
 end
 
 -- Função para atualizar ESP para todos os jogadores
-function updateESP()
+local function updateESP()
     for _, player in pairs(game.Players:GetPlayers()) do
         drawESP(player)
     end
 end
 
--- Atualiza o ESP a cada segundo
-while wait(1) do
-    updateESP()
+-- Função básica de aimbot
+local function aimbot()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            local distance = (player.Character.Head.Position - game.Players.LocalPlayer.Character.Head.Position).magnitude
+            if distance < shortestDistance then
+                closestPlayer = player
+                shortestDistance = distance
+            end
+        end
+    end
+
+    if closestPlayer then
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, closestPlayer.Character.Head.Position)
+    end
 end
+
+-- Botão para ativar/desativar o ESP
+ESPSection:Toggle{
+    Name = "Enable ESP",
+    Default = false,
+    Callback = function(state)
+        espEnabled = state
+        if espEnabled then
+            while espEnabled do
+                updateESP()
+                wait(1)
+            end
+        end
+    end
+}
+
+-- Botão para ativar/desativar o Aimbot
+AimbotSection:Toggle{
+    Name = "Enable Aimbot",
+    Default = false,
+    Callback = function(state)
+        aimbotEnabled = state
+        if aimbotEnabled then
+            while aimbotEnabled do
+                aimbot()
+                wait(0.1)
+            end
+        end
+    end
+}
+
+-- Adiciona sliders para ajustar configurações futuras
+ESPSection:Slider{
+    Name = "ESP Box Size",
+    Min = 1,
+    Max = 10,
+    Default = 4,
+    Callback = function(value)
+        -- Ajusta o tamanho da caixa ESP
+    end
+}
+
+AimbotSection:Slider{
+    Name = "Aimbot Sensitivity",
+    Min = 0.1,
+    Max = 1,
+    Default = 0.5,
+    Callback = function(value)
+        -- Ajusta a sensibilidade do aimbot
+    end
+}
