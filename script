@@ -186,7 +186,7 @@ local UIConfig = {
     }
 }
 
--- Carregar UI Library
+-- Carregar UI Library corretamente
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
 
 -- Cache e Variáveis
@@ -523,227 +523,173 @@ local Aimbot = {
     end
 }
 
--- Criar Interface Principal
-local Window = Lib:Create{
-    Name = "Premium Script",
-    Theme = "Dark",
-    Size = UDim2.new(0, 650, 0, 450),
-    Acrylic = true -- Efeito de vidro fosco
-}
+-- Criar a janela principal com configurações corretas
+local Window = Lib:Create({
+    Title = "Premium Script",
+    SubTitle = "v2.1.0",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark"
+})
 
--- Criar Abas
-local Tabs = {
-    Combat = Window:Tab{
-        Name = "Combat",
-        Icon = "⚔️"
-    },
-    Visuals = Window:Tab{
-        Name = "Visuals",
-        Icon = "👁️"
-    },
-    Settings = Window:Tab{
-        Name = "Settings",
-        Icon = "⚙️"
-    }
-}
+-- Criar as abas corretamente
+local CombatTab = Window:AddTab({
+    Title = "Combat",
+    Icon = "rbxassetid://7733799682"
+})
 
--- Seção de Combate
-local AimbotSection = Tabs.Combat:Section{
-    Name = "Aimbot",
-    Side = "Left"
-}
+local VisualsTab = Window:AddTab({
+    Title = "Visuals",
+    Icon = "rbxassetid://7733774602"
+})
 
-AimbotSection:Toggle{
-    Name = "Enable Aimbot",
-    Description = "Ativa/Desativa o aimbot",
+local SettingsTab = Window:AddTab({
+    Title = "Settings",
+    Icon = "rbxassetid://7734053495"
+})
+
+-- Aba Combat
+local AimbotSection = CombatTab:AddSection("Aimbot Settings")
+
+AimbotSection:AddToggle({
+    Title = "Enable Aimbot",
     Default = false,
     Callback = function(Value)
         Config.Aimbot.Enabled = Value
-        Notifications:Create("Aimbot", Value and "Ativado" or "Desativado", Value and "Success" or "Info")
     end
-}
+})
 
-AimbotSection:Slider{
-    Name = "Smoothness",
-    Description = "Ajusta a suavidade do aimbot",
+AimbotSection:AddSlider({
+    Title = "Smoothness",
     Default = 0.5,
     Min = 0,
     Max = 1,
     Increment = 0.1,
-    ValueFormat = "%.1f",
+    ValueName = "x",
     Callback = function(Value)
         Config.Aimbot.Settings.Smoothness = Value
     end
-}
+})
 
-AimbotSection:Dropdown{
-    Name = "Target Part",
-    Description = "Seleciona a parte do corpo para mirar",
+AimbotSection:AddDropdown({
+    Title = "Target Part",
     Default = "Head",
-    Options = {"Head", "HumanoidRootPart", "Torso", "Random"},
+    Items = {"Head", "HumanoidRootPart", "Torso", "Random"},
+    Multi = false,
     Callback = function(Value)
         Config.Aimbot.Target.Part = Value
     end
-}
+})
 
-local AimbotFOV = Tabs.Combat:Section{
-    Name = "FOV Settings",
-    Side = "Right"
-}
+-- Aba Visuals
+local ESPSection = VisualsTab:AddSection("ESP Settings")
 
-AimbotFOV:Toggle{
-    Name = "Show FOV",
-    Description = "Mostra/Oculta o círculo de FOV",
-    Default = true,
-    Callback = function(Value)
-        Config.Aimbot.FOV.Enabled = Value
-    end
-}
-
-AimbotFOV:Slider{
-    Name = "FOV Size",
-    Description = "Ajusta o tamanho do FOV",
-    Default = 150,
-    Min = 10,
-    Max = 500,
-    Callback = function(Value)
-        Config.Aimbot.FOV.Size = Value
-    end
-}
-
--- Seção Visual
-local ESPSection = Tabs.Visuals:Section{
-    Name = "ESP",
-    Side = "Left"
-}
-
-ESPSection:Toggle{
-    Name = "Enable ESP",
-    Description = "Ativa/Desativa o ESP",
+ESPSection:AddToggle({
+    Title = "Enable ESP",
     Default = false,
     Callback = function(Value)
         Config.ESP.Enabled = Value
-        Notifications:Create("ESP", Value and "Ativado" or "Desativado", Value and "Success" or "Info")
     end
-}
+})
 
-ESPSection:Toggle{
-    Name = "Box ESP",
-    Description = "Mostra caixas ao redor dos jogadores",
+ESPSection:AddToggle({
+    Title = "Box ESP",
     Default = true,
     Callback = function(Value)
         Config.ESP.BoxStyle.Enabled = Value
     end
-}
+})
 
-ESPSection:Toggle{
-    Name = "Tracer ESP",
-    Description = "Mostra linhas até os jogadores",
-    Default = true,
-    Callback = function(Value)
-        Config.ESP.Tracer.Enabled = Value
-    end
-}
-
-ESPSection:Toggle{
-    Name = "Name ESP",
-    Description = "Mostra nomes dos jogadores",
+ESPSection:AddToggle({
+    Title = "Show Names",
     Default = true,
     Callback = function(Value)
         Config.ESP.TextStyle.ShowName = Value
     end
-}
+})
 
-local ESPCustomization = Tabs.Visuals:Section{
-    Name = "ESP Customization",
-    Side = "Right"
-}
-
-ESPCustomization:ColorPicker{
-    Name = "ESP Color",
-    Description = "Cor principal do ESP",
+ESPSection:AddColorPicker({
+    Title = "ESP Color",
     Default = Color3.fromRGB(255, 0, 85),
-    Callback = function(Color)
-        Config.ESP.BoxStyle.Color = Color
-        Config.ESP.Tracer.Color = Color
-    end
-}
-
-ESPCustomization:Slider{
-    Name = "ESP Transparency",
-    Description = "Ajusta a transparência do ESP",
-    Default = 1,
-    Min = 0,
-    Max = 1,
-    Increment = 0.1,
-    ValueFormat = "%.1f",
     Callback = function(Value)
-        Config.ESP.BoxStyle.Transparency = Value
-        Config.ESP.Tracer.Transparency = Value
+        Config.ESP.BoxStyle.Color = Value
     end
-}
+})
 
--- Seção de Configurações
-local SettingsSection = Tabs.Settings:Section{
-    Name = "Performance",
-    Side = "Left"
-}
+-- Aba Settings
+local PerformanceSection = SettingsTab:AddSection("Performance")
 
-SettingsSection:Slider{
-    Name = "Update Rate",
-    Description = "Ajusta a taxa de atualização (FPS)",
+PerformanceSection:AddSlider({
+    Title = "Update Rate",
     Default = 60,
     Min = 15,
     Max = 144,
+    Increment = 1,
+    ValueName = "fps",
     Callback = function(Value)
         Performance.UpdateRate = 1 / Value
     end
-}
+})
 
-SettingsSection:Toggle{
-    Name = "Show FPS",
-    Description = "Mostra contador de FPS",
-    Default = true,
-    Callback = function(Value)
-        Performance.ShowFPS = Value
-    end
-}
+local ConfigSection = SettingsTab:AddSection("Configuration")
 
-local ConfigSection = Tabs.Settings:Section{
-    Name = "Configuration",
-    Side = "Right"
-}
-
-ConfigSection:Button{
-    Name = "Save Config",
-    Description = "Salva as configurações atuais",
+ConfigSection:AddButton({
+    Title = "Save Config",
     Callback = function()
         -- Implementar salvamento
-        Notifications:Create("Config", "Configurações salvas!", "Success")
+        Lib:Notify({
+            Title = "Success",
+            Content = "Configuration saved!",
+            Duration = 3
+        })
     end
-}
+})
 
-ConfigSection:Button{
-    Name = "Load Config",
-    Description = "Carrega configurações salvas",
+ConfigSection:AddButton({
+    Title = "Load Config",
     Callback = function()
         -- Implementar carregamento
-        Notifications:Create("Config", "Configurações carregadas!", "Success")
+        Lib:Notify({
+            Title = "Success",
+            Content = "Configuration loaded!",
+            Duration = 3
+        })
     end
-}
+})
 
--- Inicializar Interface
-Window:Initialize()
+-- Keybinds
+local KeybindSection = SettingsTab:AddSection("Keybinds")
 
--- Loop Principal
+KeybindSection:AddKeybind({
+    Title = "Toggle UI",
+    Default = Enum.KeyCode.RightShift,
+    Callback = function()
+        -- Toggle UI visibility
+    end
+})
+
+-- Adicionar informações
+local InfoSection = SettingsTab:AddSection("Information")
+
+InfoSection:AddParagraph({
+    Title = "Script Info",
+    Content = "Version: 2.1.0\nLast Updated: 2024"
+})
+
+-- Inicializar a interface
+Window:SelectTab(1)
+
+-- Notificação inicial
+Lib:Notify({
+    Title = "Script Loaded",
+    Content = "Welcome to Premium Script!",
+    Duration = 5
+})
+
+-- Loop principal
 RunService.RenderStepped:Connect(function()
-    Performance:UpdateFPS()
-    Notifications:Update()
-    
     if Performance:ShouldUpdate() then
-        -- Atualizar ESP e Aimbot aqui
+        -- Atualizar ESP e Aimbot
     end
-end)
-
--- Notificação Inicial
-Notifications:Create("Script", "Carregado com sucesso!", "Success") 
+end) 
