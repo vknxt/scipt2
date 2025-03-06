@@ -167,6 +167,25 @@ local Performance = {
     end
 }
 
+-- Configurações da Interface
+local UIConfig = {
+    Theme = {
+        Primary = Color3.fromRGB(30, 30, 35),
+        Secondary = Color3.fromRGB(45, 45, 50),
+        Accent = Color3.fromRGB(255, 0, 85),
+        Text = Color3.fromRGB(255, 255, 255),
+        Success = Color3.fromRGB(0, 255, 140),
+        Warning = Color3.fromRGB(255, 165, 0),
+        Error = Color3.fromRGB(255, 0, 85),
+        Background = Color3.fromRGB(25, 25, 30)
+    },
+    Animation = {
+        Duration = 0.3,
+        Style = Enum.EasingStyle.Quart,
+        Direction = Enum.EasingDirection.Out
+    }
+}
+
 -- Carregar UI Library
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
 
@@ -504,12 +523,12 @@ local Aimbot = {
     end
 }
 
--- Criar Interface
+-- Criar Interface Principal
 local Window = Lib:Create{
-    Name = "Premium ESP & Aimbot",
+    Name = "Premium Script",
     Theme = "Dark",
     Size = UDim2.new(0, 650, 0, 450),
-    Acrylic = true
+    Acrylic = true -- Efeito de vidro fosco
 }
 
 -- Criar Abas
@@ -528,26 +547,30 @@ local Tabs = {
     }
 }
 
--- Aba Combat
+-- Seção de Combate
 local AimbotSection = Tabs.Combat:Section{
-    Name = "Aimbot Settings",
+    Name = "Aimbot",
     Side = "Left"
 }
 
 AimbotSection:Toggle{
     Name = "Enable Aimbot",
+    Description = "Ativa/Desativa o aimbot",
     Default = false,
     Callback = function(Value)
         Config.Aimbot.Enabled = Value
+        Notifications:Create("Aimbot", Value and "Ativado" or "Desativado", Value and "Success" or "Info")
     end
 }
 
 AimbotSection:Slider{
     Name = "Smoothness",
+    Description = "Ajusta a suavidade do aimbot",
     Default = 0.5,
     Min = 0,
     Max = 1,
     Increment = 0.1,
+    ValueFormat = "%.1f",
     Callback = function(Value)
         Config.Aimbot.Settings.Smoothness = Value
     end
@@ -555,220 +578,172 @@ AimbotSection:Slider{
 
 AimbotSection:Dropdown{
     Name = "Target Part",
-    Description = "Select target body part",
+    Description = "Seleciona a parte do corpo para mirar",
     Default = "Head",
-    Options = {"Head", "Torso", "Random"},
+    Options = {"Head", "HumanoidRootPart", "Torso", "Random"},
     Callback = function(Value)
         Config.Aimbot.Target.Part = Value
     end
 }
 
-local AimbotAdvanced = Tabs.Combat:Section{
-    Name = "Advanced Settings",
+local AimbotFOV = Tabs.Combat:Section{
+    Name = "FOV Settings",
     Side = "Right"
 }
 
-AimbotAdvanced:Toggle{
-    Name = "Prediction",
-    Description = "Enable movement prediction",
+AimbotFOV:Toggle{
+    Name = "Show FOV",
+    Description = "Mostra/Oculta o círculo de FOV",
     Default = true,
     Callback = function(Value)
-        Config.Aimbot.Settings.Prediction.Enabled = Value
+        Config.Aimbot.FOV.Enabled = Value
     end
 }
 
-AimbotAdvanced:ColorPicker{
-    Name = "FOV Color",
-    Description = "Adjust FOV circle color",
-    Default = VisualSettings.ESP.BoxColors.Enemy,
-    Callback = function(Color)
-        Config.Aimbot.FOV.Color = Color
+AimbotFOV:Slider{
+    Name = "FOV Size",
+    Description = "Ajusta o tamanho do FOV",
+    Default = 150,
+    Min = 10,
+    Max = 500,
+    Callback = function(Value)
+        Config.Aimbot.FOV.Size = Value
     end
 }
 
--- Aba Visuals
+-- Seção Visual
 local ESPSection = Tabs.Visuals:Section{
-    Name = "ESP Settings",
+    Name = "ESP",
     Side = "Left"
 }
 
 ESPSection:Toggle{
     Name = "Enable ESP",
+    Description = "Ativa/Desativa o ESP",
     Default = false,
     Callback = function(Value)
         Config.ESP.Enabled = Value
+        Notifications:Create("ESP", Value and "Ativado" or "Desativado", Value and "Success" or "Info")
     end
 }
 
-ESPSection:MultiDropdown{
-    Name = "ESP Features",
-    Description = "Select ESP elements to display",
-    Default = {"Box", "Name", "Distance"},
-    Options = {"Box", "Name", "Distance", "Health", "Weapon", "Skeleton", "Tracers"},
-    Callback = function(Values)
-        for feature, enabled in pairs(Values) do
-            Config.ESP.Features["Show"..feature] = enabled
-        end
+ESPSection:Toggle{
+    Name = "Box ESP",
+    Description = "Mostra caixas ao redor dos jogadores",
+    Default = true,
+    Callback = function(Value)
+        Config.ESP.BoxStyle.Enabled = Value
     end
 }
 
-local VisualStyles = Tabs.Visuals:Section{
-    Name = "Visual Style",
+ESPSection:Toggle{
+    Name = "Tracer ESP",
+    Description = "Mostra linhas até os jogadores",
+    Default = true,
+    Callback = function(Value)
+        Config.ESP.Tracer.Enabled = Value
+    end
+}
+
+ESPSection:Toggle{
+    Name = "Name ESP",
+    Description = "Mostra nomes dos jogadores",
+    Default = true,
+    Callback = function(Value)
+        Config.ESP.TextStyle.ShowName = Value
+    end
+}
+
+local ESPCustomization = Tabs.Visuals:Section{
+    Name = "ESP Customization",
     Side = "Right"
 }
 
-VisualStyles:ColorPicker{
-    Name = "Enemy Color",
-    Description = "ESP color for enemies",
-    Default = VisualSettings.ESP.BoxColors.Enemy,
+ESPCustomization:ColorPicker{
+    Name = "ESP Color",
+    Description = "Cor principal do ESP",
+    Default = Color3.fromRGB(255, 0, 85),
     Callback = function(Color)
-        VisualSettings.ESP.BoxColors.Enemy = Color
+        Config.ESP.BoxStyle.Color = Color
+        Config.ESP.Tracer.Color = Color
     end
 }
 
-VisualStyles:ColorPicker{
-    Name = "Team Color",
-    Description = "ESP color for teammates",
-    Default = VisualSettings.ESP.BoxColors.Team,
-    Callback = function(Color)
-        VisualSettings.ESP.BoxColors.Team = Color
+ESPCustomization:Slider{
+    Name = "ESP Transparency",
+    Description = "Ajusta a transparência do ESP",
+    Default = 1,
+    Min = 0,
+    Max = 1,
+    Increment = 0.1,
+    ValueFormat = "%.1f",
+    Callback = function(Value)
+        Config.ESP.BoxStyle.Transparency = Value
+        Config.ESP.Tracer.Transparency = Value
     end
 }
 
--- Settings Tab
+-- Seção de Configurações
+local SettingsSection = Tabs.Settings:Section{
+    Name = "Performance",
+    Side = "Left"
+}
+
+SettingsSection:Slider{
+    Name = "Update Rate",
+    Description = "Ajusta a taxa de atualização (FPS)",
+    Default = 60,
+    Min = 15,
+    Max = 144,
+    Callback = function(Value)
+        Performance.UpdateRate = 1 / Value
+    end
+}
+
+SettingsSection:Toggle{
+    Name = "Show FPS",
+    Description = "Mostra contador de FPS",
+    Default = true,
+    Callback = function(Value)
+        Performance.ShowFPS = Value
+    end
+}
+
 local ConfigSection = Tabs.Settings:Section{
     Name = "Configuration",
-    Side = "Left"
+    Side = "Right"
 }
 
 ConfigSection:Button{
     Name = "Save Config",
-    Description = "Save current settings",
+    Description = "Salva as configurações atuais",
     Callback = function()
         -- Implementar salvamento
-        Window:Notify{
-            Title = "Success",
-            Description = "Configuration saved!",
-            Duration = 2,
-            Type = "Success"
-        }
+        Notifications:Create("Config", "Configurações salvas!", "Success")
     end
 }
 
 ConfigSection:Button{
     Name = "Load Config",
-    Description = "Load saved settings",
+    Description = "Carrega configurações salvas",
     Callback = function()
         -- Implementar carregamento
-        Window:Notify{
-            Title = "Success",
-            Description = "Configuration loaded!",
-            Duration = 2,
-            Type = "Success"
-        }
+        Notifications:Create("Config", "Configurações carregadas!", "Success")
     end
 }
 
-local PerformanceSection = Tabs.Settings:Section{
-    Name = "Performance",
-    Side = "Right"
-}
+-- Inicializar Interface
+Window:Initialize()
 
-PerformanceSection:Slider{
-    Name = "Update Rate",
-    Description = "ESP update frequency",
-    Default = 0.1,
-    Min = 0.01,
-    Max = 1,
-    Increment = 0.01,
-    ValueFormat = "%.2fs",
-    Callback = function(Value)
-        Config.ESP.Performance.UpdateRate = Value
-    end
-}
-
--- Info Tab
-local InfoSection = Tabs.Info:Section{
-    Name = "Information",
-    Side = "Left"
-}
-
-InfoSection:Label{
-    Text = "Premium ESP & Aimbot v1.0.0",
-    Color = VisualSettings.ESP.BoxColors.Enemy
-}
-
-InfoSection:Label{
-    Text = "Created by: [Your Name]",
-    Color = VisualSettings.ESP.TextColors.Primary
-}
-
-InfoSection:Button{
-    Name = "Copy Discord",
-    Description = "Copy Discord invite link",
-    Callback = function()
-        setclipboard("your_discord_link")
-        Window:Notify{
-            Title = "Success",
-            Description = "Discord link copied!",
-            Duration = 2,
-            Type = "Success"
-        }
-    end
-}
-
--- Keybinds Section
-local KeybindSection = Tabs.Settings:Section{
-    Name = "Keybinds",
-    Side = "Left"
-}
-
-KeybindSection:Keybind{
-    Name = "Toggle UI",
-    Description = "Show/Hide interface",
-    Default = Enum.KeyCode.RightShift,
-    Callback = function()
-        Window:Toggle()
-    end
-}
-
-KeybindSection:Keybind{
-    Name = "Aimbot Key",
-    Description = "Key to activate aimbot",
-    Default = Enum.KeyCode.E,
-    Callback = function(Key)
-        Config.Aimbot.Target.Lock = Key
-    end
-}
-
--- Inicializar
-local function Init()
-    -- Conectar funções de atualização
-    RunService:BindToRenderStep("ESP", 1, ESP.UpdateESP)
-    RunService:BindToRenderStep("Aimbot", 2, Aimbot.Update)
+-- Loop Principal
+RunService.RenderStepped:Connect(function()
+    Performance:UpdateFPS()
+    Notifications:Update()
     
-    -- Manipulação de jogadores
-    Players.PlayerAdded:Connect(function(player)
-        ESP.CreateESPObject(player)
-    end)
-    
-    Players.PlayerRemoving:Connect(function(player)
-        if Cache.ESP[player] then
-            for _, object in pairs(Cache.ESP[player]) do
-                Utility.DestroyDrawing(object)
-            end
-            Cache.ESP[player] = nil
-        end
-    end)
-    
-    -- Inicializar jogadores existentes
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            ESP.CreateESPObject(player)
-        end
+    if Performance:ShouldUpdate() then
+        -- Atualizar ESP e Aimbot aqui
     end
-end
+end)
 
--- Iniciar o script
-Init()
-Window:Initialize() 
+-- Notificação Inicial
+Notifications:Create("Script", "Carregado com sucesso!", "Success") 
