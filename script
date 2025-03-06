@@ -4,7 +4,7 @@ local Config = {
         Ativado = true,
         Cor = Color3.fromRGB(0, 255, 0), -- Cor verde para melhor visibilidade
         Tamanho = Vector3.new(4, 6, 1),
-        Transparencia = 0.2, -- Mais visível
+        Transparencia = 0.1, -- Menos visível para um efeito mais bonito
         AtualizacaoDelay = 0.05, -- Atualiza mais rápido
         MostrarNomes = true,
         MostrarDistancia = true,
@@ -12,11 +12,11 @@ local Config = {
     },
     Aimbot = {
         Ativado = true,
-        Sensibilidade = 0.3,
+        Sensibilidade = 0.1, -- Aumenta a suavização do movimento
         AlcanceMaximo = 800,
         MiraNaCabeca = true,
         SuavizacaoMovimento = true,
-        AtualizacaoDelay = 0.02
+        AtualizacaoDelay = 0.01 -- Aumenta a frequência de atualização
     }
 }
 
@@ -34,7 +34,7 @@ local function desenharESP(jogador)
             end
         end
         
-        -- Cria o contorno (box ESP)
+        -- Cria o contorno (box ESP) com bordas arredondadas
         local caixa = Instance.new("BoxHandleAdornment")
         caixa.Size = Config.ESP.Tamanho
         caixa.Adornee = jogador.Character
@@ -58,6 +58,7 @@ local function desenharESP(jogador)
             info.TextColor3 = Config.ESP.Cor
             info.Font = Enum.Font.GothamBold
             info.TextScaled = true
+            info.TextStrokeTransparency = 0.5 -- Adiciona contorno ao texto
             
             local distancia = 0
             local vida = 0
@@ -105,7 +106,8 @@ local function aimbot()
                     jogador.Character and 
                     jogador.Character:FindFirstChild("Head") and 
                     jogador.Character:FindFirstChild("Humanoid") and 
-                    jogador.Character.Humanoid.Health > 0 then
+                    jogador.Character.Humanoid.Health > 0 and 
+                    jogador.Team ~= jogadorLocal.Team then -- Não mira em jogadores do mesmo time
                     
                     local distancia = (jogador.Character.Head.Position - jogadorLocal.Character.Head.Position).Magnitude
                     if distancia < menorDistancia then
@@ -123,9 +125,11 @@ local function aimbot()
                 local framePosicaoAtual = jogadorLocal.Character.HumanoidRootPart.CFrame
                 local frameAlvo = CFrame.new(framePosicaoAtual.Position, alvo)
                 
+                -- Melhorar a suavização do movimento
                 if Config.Aimbot.SuavizacaoMovimento then
+                    local suavizacao = Config.Aimbot.Sensibilidade * (1 / (1 + menorDistancia / Config.Aimbot.AlcanceMaximo))
                     jogadorLocal.Character.HumanoidRootPart.CFrame = 
-                        framePosicaoAtual:Lerp(frameAlvo, Config.Aimbot.Sensibilidade)
+                        framePosicaoAtual:Lerp(frameAlvo, suavizacao)
                 else
                     jogadorLocal.Character.HumanoidRootPart.CFrame = frameAlvo
                 end
