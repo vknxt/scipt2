@@ -1,38 +1,40 @@
--- Configurações principais
+-- Configurações gerais do script
 local Config = {
     ESP = {
         Ativado = true,
-        Cor = Color3.fromRGB(255, 0, 0),
+        Cor = Color3.fromRGB(0, 255, 0), -- Cor verde para melhor visibilidade
         Tamanho = Vector3.new(4, 6, 1),
-        Transparencia = 0.3,
-        AtualizacaoDelay = 0.1,
+        Transparencia = 0.2, -- Mais visível
+        AtualizacaoDelay = 0.05, -- Atualiza mais rápido
         MostrarNomes = true,
         MostrarDistancia = true,
         MostrarVida = true
     },
     Aimbot = {
         Ativado = true,
-        Sensibilidade = 0.5,
-        AlcanceMaximo = 1000,
+        Sensibilidade = 0.3,
+        AlcanceMaximo = 800,
         MiraNaCabeca = true,
         SuavizacaoMovimento = true,
-        AtualizacaoDelay = 0.05
+        AtualizacaoDelay = 0.02
     }
 }
 
--- Função para desenhar ESP
+-- Função para criar ESP
 local function desenharESP(jogador)
     if not (jogador and jogador.Character and jogador.Character:FindFirstChild("HumanoidRootPart") and jogador ~= game.Players.LocalPlayer) then 
         return 
     end
     
     pcall(function()
+        -- Remove ESP antigo
         for _, v in pairs(jogador.Character:GetChildren()) do
             if v:IsA("BoxHandleAdornment") or v:IsA("BillboardGui") then
                 v:Destroy()
             end
         end
         
+        -- Cria o contorno (box ESP)
         local caixa = Instance.new("BoxHandleAdornment")
         caixa.Size = Config.ESP.Tamanho
         caixa.Adornee = jogador.Character
@@ -42,6 +44,7 @@ local function desenharESP(jogador)
         caixa.Transparency = Config.ESP.Transparencia
         caixa.Parent = jogador.Character
         
+        -- Exibe informações do jogador
         if Config.ESP.MostrarNomes and jogador.Character:FindFirstChild("Head") then
             local infoPanel = Instance.new("BillboardGui")
             infoPanel.Size = UDim2.new(0, 200, 0, 60)
@@ -54,6 +57,7 @@ local function desenharESP(jogador)
             info.BackgroundTransparency = 1
             info.TextColor3 = Config.ESP.Cor
             info.Font = Enum.Font.GothamBold
+            info.TextScaled = true
             
             local distancia = 0
             local vida = 0
@@ -64,26 +68,71 @@ local function desenharESP(jogador)
             end)
             
             info.Text = string.format("%s\nDist: %d\nHP: %d%%", jogador.Name, distancia, vida)
-            info.TextScaled = true
             info.Parent = infoPanel
         end
     end)
 end
 
--- Função para atualizar ESP constantemente
+-- Loop contínuo para atualizar ESP
 local function atualizarESP()
-    while true do
-        if Config.ESP.Ativado then
-            pcall(function()
-                for _, jogador in ipairs(game.Players:GetPlayers()) do
-                    if jogador ~= game.Players.LocalPlayer then
-                        desenharESP(jogador)
-                    end
+    while Config.ESP.Ativado do
+        pcall(function()
+            for _, jogador in ipairs(game.Players:GetPlayers()) do
+                if jogador ~= game.Players.LocalPlayer then
+                    desenharESP(jogador)
                 end
-            end)
-        end
+            end
+        end)
         task.wait(Config.ESP.AtualizacaoDelay)
     end
 end
 
 task.spawn(atualizarESP)
+
+-- Função do Aimbot
+local function aimbot()
+    while Config.Aimbot.Ativado do
+        pcall(function()
+            local jogadorLocal = game.Players.LocalPlayer
+            if not (jogadorLocal and jogadorLocal.Character and jogadorLocal.Character:FindFirstChild("HumanoidRootPart")) then 
+                return 
+            end
+            
+            local jogadorMaisProximo, menorDistancia = nil, Config.Aimbot.AlcanceMaximo
+            
+            for _, jogador in ipairs(game.Players:GetPlayers()) do
+                if  jogador ~= jogadorLocal and 
+                    jogador.Character and 
+                    jogador.Character:FindFirstChild("Head") and 
+                    jogador.Character:FindFirstChild("Humanoid") and 
+                    jogador.Character.Humanoid.Health > 0 then
+                    
+                    local distancia = (jogador.Character.Head.Position - jogadorLocal.Character.Head.Position).Magnitude
+                    if distancia < menorDistancia then
+                        jogadorMaisProximo = jogador
+                        menorDistancia = distancia
+                    end
+                end
+            end
+
+            if jogadorMaisProximo and jogadorMaisProximo.Character then
+                local alvo = Config.Aimbot.MiraNaCabeca and 
+                            jogadorMaisProximo.Character.Head.Position or 
+                            jogadorMaisProximo.Character.HumanoidRootPart.Position
+                
+                local framePosicaoAtual = jogadorLocal.Character.HumanoidRootPart.CFrame
+                local frameAlvo = CFrame.new(framePosicaoAtual.Position, alvo)
+                
+                if Config.Aimbot.SuavizacaoMovimento then
+                    jogadorLocal.Character.HumanoidRootPart.CFrame = 
+                        framePosicaoAtual:Lerp(frameAlvo, Config.Aimbot.Sensibilidade)
+                else
+                    jogadorLocal.Character.HumanoidRootPart.CFrame = frameAlvo
+                end
+            end
+        end)
+        task.wait(Config.Aimbot.AtualizacaoDelay)
+    end
+end
+
+task.spawn(aimbot)
