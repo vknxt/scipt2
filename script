@@ -9,26 +9,26 @@
     CPX Script v3.0.0
 ]]
 
--- Aguardar carregamento
+-- Esperar o jogo carregar
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
--- Anti execução múltipla
+-- Prevenir execução múltipla
 if getgenv().PremiumLoaded then return end
 getgenv().PremiumLoaded = true
 
--- Serviços
+-- Serviços do Roblox
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- Carregar UI Library (usando Orion Library por ser mais estável)
+-- Carregar a biblioteca de UI (Orion Library)
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
--- Configurações
+-- Configurações do script
 local Config = {
     ESP = {
         Enabled = false,
@@ -49,7 +49,7 @@ local Config = {
     }
 }
 
--- Criar janela principal
+-- Criar a janela principal da UI
 local Window = OrionLib:MakeWindow({
     Name = "CPX Script", 
     HidePremium = true,
@@ -57,7 +57,7 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "CPXScript"
 })
 
--- Criar abas
+-- Criar abas na UI
 local CombatTab = Window:MakeTab({
     Name = "Combat",
     Icon = "rbxassetid://4483345998",
@@ -76,7 +76,7 @@ local SettingsTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Seção Aimbot
+-- Seção de Aimbot
 local AimbotSection = CombatTab:AddSection({
     Name = "Aimbot"
 })
@@ -126,7 +126,7 @@ AimbotSection:AddDropdown({
     end    
 })
 
--- Seção ESP
+-- Seção de ESP
 local ESPSection = VisualsTab:AddSection({
     Name = "ESP"
 })
@@ -181,7 +181,7 @@ ESPSection:AddColorpicker({
     end  
 })
 
--- Seção Settings
+-- Seção de Configurações
 local SettingsSection = SettingsTab:AddSection({
     Name = "Settings"
 })
@@ -256,7 +256,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Inicialização
+-- Inicialização da UI
 OrionLib:Init()
 
 -- Notificação inicial
