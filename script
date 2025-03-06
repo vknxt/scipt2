@@ -1,13 +1,3 @@
--- Carrega a UI Library sem exibir GUI
-local success, Lib = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
-end)
-
-if not success then
-    warn("Erro ao carregar UI Library. Por favor, tente novamente.")
-    return
-end
-
 -- Configurações principais
 local Config = {
     ESP = {
@@ -82,64 +72,18 @@ end
 
 -- Função para atualizar ESP constantemente
 local function atualizarESP()
-    while Config.ESP.Ativado do
-        pcall(function()
-            for _, jogador in ipairs(game.Players:GetPlayers()) do
-                if jogador ~= game.Players.LocalPlayer then
-                    desenharESP(jogador)
+    while true do
+        if Config.ESP.Ativado then
+            pcall(function()
+                for _, jogador in ipairs(game.Players:GetPlayers()) do
+                    if jogador ~= game.Players.LocalPlayer then
+                        desenharESP(jogador)
+                    end
                 end
-            end
-        end)
+            end)
+        end
         task.wait(Config.ESP.AtualizacaoDelay)
     end
 end
 
 task.spawn(atualizarESP)
-
--- Função Aimbot
-local function aimbot()
-    while Config.Aimbot.Ativado do
-        pcall(function()
-            local jogadorLocal = game.Players.LocalPlayer
-            if not (jogadorLocal and jogadorLocal.Character and jogadorLocal.Character:FindFirstChild("HumanoidRootPart")) then 
-                return 
-            end
-            
-            local jogadorMaisProximo, menorDistancia = nil, Config.Aimbot.AlcanceMaximo
-            
-            for _, jogador in ipairs(game.Players:GetPlayers()) do
-                if  jogador ~= jogadorLocal and 
-                    jogador.Character and 
-                    jogador.Character:FindFirstChild("Head") and 
-                    jogador.Character:FindFirstChild("Humanoid") and 
-                    jogador.Character.Humanoid.Health > 0 then
-                    
-                    local distancia = (jogador.Character.Head.Position - jogadorLocal.Character.Head.Position).Magnitude
-                    if distancia < menorDistancia then
-                        jogadorMaisProximo = jogador
-                        menorDistancia = distancia
-                    end
-                end
-            end
-
-            if jogadorMaisProximo and jogadorMaisProximo.Character then
-                local alvo = Config.Aimbot.MiraNaCabeca and 
-                            jogadorMaisProximo.Character.Head.Position or 
-                            jogadorMaisProximo.Character.HumanoidRootPart.Position
-                
-                local framePosicaoAtual = jogadorLocal.Character.HumanoidRootPart.CFrame
-                local frameAlvo = CFrame.new(framePosicaoAtual.Position, alvo)
-                
-                if Config.Aimbot.SuavizacaoMovimento then
-                    jogadorLocal.Character.HumanoidRootPart.CFrame = 
-                        framePosicaoAtual:Lerp(frameAlvo, Config.Aimbot.Sensibilidade)
-                else
-                    jogadorLocal.Character.HumanoidRootPart.CFrame = frameAlvo
-                end
-            end
-        end)
-        task.wait(Config.Aimbot.AtualizacaoDelay)
-    end
-end
-
-task.spawn(aimbot)
