@@ -8,13 +8,15 @@ if not success then
     return
 end
 
--- Cria a UI com tratamento de erro
+-- Cria a UI com tratamento de erro e teclas de atalho
 local UI
 success, UI = pcall(function()
     return Lib:Create{
-        Theme = "Dark", 
+        Theme = "Dark",
         Size = UDim2.new(0, 600, 0, 450),
-        Title = "⭐ ESP & Aimbot Premium v2.0 ⭐"
+        Title = "⭐ ESP & Aimbot Premium v2.0 ⭐",
+        MinimizeKey = Enum.KeyCode.PageUp, -- Tecla para minimizar
+        CloseKey = Enum.KeyCode.Delete -- Tecla para fechar
     }
 end)
 
@@ -22,6 +24,31 @@ if not success then
     warn("Erro ao criar interface. Por favor, tente novamente.")
     return
 end
+
+-- Configura eventos de teclas
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed then
+        if input.KeyCode == Enum.KeyCode.PageUp then
+            UI:Minimize() -- Minimiza a interface
+        elseif input.KeyCode == Enum.KeyCode.Delete then
+            UI:Destroy() -- Fecha completamente o script
+            Config.ESP.Ativado = false
+            Config.Aimbot.Ativado = false
+            -- Limpa ESP existente
+            pcall(function()
+                for _, jogador in ipairs(game.Players:GetPlayers()) do
+                    if jogador.Character then
+                        for _, v in pairs(jogador.Character:GetChildren()) do
+                            if v:IsA("BoxHandleAdornment") or v:IsA("BillboardGui") then
+                                v:Destroy()
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
 
 -- Cria abas com verificação
 local MenuPrincipal = UI:Tab{ Name = "🎯 Principal" }
@@ -36,6 +63,7 @@ local SecaoConfigAvancadas = MenuConfig:Section{ Name = "🔧 Configurações Av
 pcall(function()
     MenuPrincipal:Label{ Text = "✨ Bem-vindo ao ESP & Aimbot Premium v2.0 ✨" }
     MenuPrincipal:Label{ Text = "💫 Sistema otimizado para máximo desempenho" }
+    MenuPrincipal:Label{ Text = "⌨️ PgUp: Minimizar | Del: Fechar" }
 end)
 
 -- Configurações com valores seguros
