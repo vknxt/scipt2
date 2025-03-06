@@ -7,556 +7,67 @@
     ╚═══╩══╩══╩╝╚╝╚═╩╝╚╩╩╩╝─╚╝──╚══╩╝
     
     Premium Script v2.1.0
-    Last Updated: 2024
 ]]
 
--- Verificação inicial e proteção
-if not game:IsLoaded() then game.Loaded:Wait() end
-if getgenv().ScriptLoaded then return end
-getgenv().ScriptLoaded = true
+-- Aguardar carregamento
+repeat task.wait() until game:IsLoaded()
 
--- Serviços com proteção contra erros
-local Services = setmetatable({
-    Loaded = {},
-}, {
-    __index = function(self, service)
-        if self.Loaded[service] then 
-            return self.Loaded[service]
-        end
-        
-        local success, result = pcall(function()
-            return game:GetService(service)
-        end)
-        
-        if success then
-            self.Loaded[service] = result
-            return result
-        end
-        
-        warn("❌ Falha ao carregar serviço:", service)
-        return nil
-    end
-})
-
--- Carregar serviços essenciais
-local Players = Services.Players
-local RunService = Services.RunService
-local UserInputService = Services.UserInputService
-local TweenService = Services.TweenService
-local HttpService = Services.HttpService
-local CoreGui = Services.CoreGui
+-- Serviços
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- Verificações de compatibilidade
-local function CheckCompatibility()
-    local requirements = {
-        Drawing = typeof(Drawing) == "table",
-        NewDrawing = typeof(Drawing.new) == "function",
-        Workspace = typeof(workspace) == "Instance",
-        Camera = typeof(Camera) == "Instance"
-    }
-    
-    for name, passed in pairs(requirements) do
-        if not passed then
-            warn("❌ Requisito não atendido:", name)
-            return false
-        end
-    end
-    
-    return true
-end
-
-if not CheckCompatibility() then return end
-
--- Sistema de Notificações Aprimorado
-local Notifications = {
-    Active = {},
-    MaxNotifications = 5,
-    Duration = 5,
-    
-    Create = function(self, title, message, type)
-        -- Remover notificações antigas se necessário
-        while #self.Active >= self.MaxNotifications do
-            local oldest = table.remove(self.Active, 1)
-            if oldest.Object then
-                oldest.Object:Destroy()
-            end
-        end
-        
-        -- Criar nova notificação
-        local notification = Drawing.new("Text")
-        notification.Text = string.format("【%s】%s", title, message)
-        notification.Size = 18
-        notification.Center = false
-        notification.Outline = true
-        notification.Position = Vector2.new(10, 10 + (#self.Active * 25))
-        
-        -- Definir cor baseada no tipo
-        local colors = {
-            Success = Color3.fromRGB(0, 255, 140),
-            Warning = Color3.fromRGB(255, 165, 0),
-            Error = Color3.fromRGB(255, 0, 85),
-            Info = Color3.fromRGB(100, 200, 255)
-        }
-        notification.Color = colors[type] or colors.Info
-        notification.Visible = true
-        
-        -- Animar entrada
-        local startTime = tick()
-        local function animate()
-            local elapsed = tick() - startTime
-            local alpha = math.clamp(elapsed / 0.3, 0, 1)
-            notification.Transparency = 1 - alpha
-            
-            if elapsed >= self.Duration then
-                -- Animar saída
-                local fadeOut = (elapsed - self.Duration) / 0.3
-                notification.Transparency = fadeOut
-                
-                if fadeOut >= 1 then
-                    notification:Remove()
-                    return false
-                end
-            end
-            return true
-        end
-        
-        table.insert(self.Active, {
-            Object = notification,
-            Animate = animate
-        })
-    end,
-    
-    Update = function(self)
-        for i = #self.Active, 1, -1 do
-            local notif = self.Active[i]
-            if not notif.Animate() then
-                table.remove(self.Active, i)
-            end
-        end
-    end
-}
-
--- Sistema de Performance Aprimorado
-local Performance = {
-    FPS = {
-        Current = 0,
-        Samples = {},
-        MaxSamples = 50,
-        LastUpdate = 0
-    },
-    
-    UpdateFPS = function(self)
-        local currentTime = tick()
-        table.insert(self.FPS.Samples, 1, currentTime)
-        
-        if #self.FPS.Samples > self.FPS.MaxSamples then
-            table.remove(self.FPS.Samples)
-        end
-        
-        if currentTime - self.FPS.LastUpdate >= 0.5 then
-            local delta = self.FPS.Samples[1] - self.FPS.Samples[#self.FPS.Samples]
-            self.FPS.Current = math.floor((#self.FPS.Samples - 1) / delta)
-            self.FPS.LastUpdate = currentTime
-        end
-    end,
-    
-    ShouldUpdate = function(self, interval)
-        return tick() - (self.LastUpdate or 0) >= (interval or 0.03)
-    end
-}
-
--- Configurações da Interface
-local UIConfig = {
-    Theme = {
-        Primary = Color3.fromRGB(30, 30, 35),
-        Secondary = Color3.fromRGB(45, 45, 50),
-        Accent = Color3.fromRGB(255, 0, 85),
-        Text = Color3.fromRGB(255, 255, 255),
-        Success = Color3.fromRGB(0, 255, 140),
-        Warning = Color3.fromRGB(255, 165, 0),
-        Error = Color3.fromRGB(255, 0, 85),
-        Background = Color3.fromRGB(25, 25, 30)
-    },
-    Animation = {
-        Duration = 0.3,
-        Style = Enum.EasingStyle.Quart,
-        Direction = Enum.EasingDirection.Out
-    }
-}
-
--- Carregar UI Library corretamente
-local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
-
--- Cache e Variáveis
-local Cache = {
-    ESP = {},
-    Connections = {},
-    DrawingObjects = {},
-    LastUpdate = 0,
-    UpdateInterval = 0.1
-}
-
--- Configurações Visuais
-local VisualSettings = {
-    ESP = {
-        BoxColors = {
-            Enemy = Color3.fromRGB(255, 0, 0),
-            Team = Color3.fromRGB(0, 255, 0),
-            Target = Color3.fromRGB(255, 255, 0)
-        },
-        TextColors = {
-            Primary = Color3.fromRGB(255, 255, 255),
-            Secondary = Color3.fromRGB(200, 200, 200),
-            Warning = Color3.fromRGB(255, 150, 0)
-        },
-        TracerStyles = {
-            Default = {
-                Thickness = 1,
-                Color = Color3.fromRGB(255, 0, 0)
-            },
-            Target = {
-                Thickness = 2,
-                Color = Color3.fromRGB(255, 255, 0)
-            }
-        }
-    },
-    UI = {
-        Colors = {
-            Primary = Color3.fromRGB(30, 30, 35),
-            Secondary = Color3.fromRGB(45, 45, 50),
-            Accent = Color3.fromRGB(255, 0, 85),
-            Text = Color3.fromRGB(255, 255, 255)
-        }
-    }
-}
+-- Carregar UI Library
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
 
 -- Configurações
 local Config = {
     ESP = {
         Enabled = false,
-        BoxStyle = {
-            Type = "Corner",
-            Thickness = 1.5,
-            Transparency = 0.8,
-            Animated = true
-        },
-        TextStyle = {
-            Size = 14,
-            Outline = true,
-            Shadow = true
-        },
-        Features = {
-            ShowDistance = true,
-            ShowHealth = true,
-            ShowWeapon = true,
-            ShowTeam = true,
-            ShowSkeleton = true,
-            RainbowMode = false
-        },
-        Performance = {
-            MaxDistance = 1000,
-            UpdateRate = 0.1,
-            SmoothUpdates = true
-        }
+        ShowBox = true,
+        ShowHealth = true,
+        ShowName = true,
+        ShowDistance = true,
+        BoxColor = Color3.fromRGB(255, 0, 0),
+        TextColor = Color3.fromRGB(255, 255, 255)
     },
     Aimbot = {
         Enabled = false,
-        Settings = {
-            TeamCheck = true,
-            VisibilityCheck = true,
-            Smoothness = 0.5,
-            Prediction = {
-                Enabled = true,
-                Amount = 0.15
-            }
-        },
-        FOV = {
-            Enabled = true,
-            Size = 150,
-            Color = Color3.fromRGB(255, 0, 85),
-            Filled = false,
-            Transparency = 0.5,
-            Animated = true
-        },
-        Target = {
-            Part = "Head",
-            Priority = "Distance",
-            Lock = "Hold",
-            AutoShoot = false
-        }
+        TeamCheck = true,
+        Smoothness = 0.5,
+        AimPart = "Head",
+        FOVSize = 100
     }
 }
 
--- Funções Utilitárias
-local Utility = {
-    IsAlive = function(player)
-        local character = player.Character
-        local humanoid = character and character:FindFirstChild("Humanoid")
-        return character and humanoid and humanoid.Health > 0
-    end,
-    
-    GetDistance = function(position)
-        return (Camera.CFrame.Position - position).Magnitude
-    end,
-    
-    WorldToViewport = function(position)
-        local success, result = pcall(function()
-            return Camera:WorldToViewportPoint(position)
-        end)
-        return success and result
-    end,
-    
-    CreateDrawing = function(type, properties)
-        local object = Drawing.new(type)
-        for property, value in pairs(properties) do
-            object[property] = value
-        end
-        return object
-    end,
-    
-    DestroyDrawing = function(object)
-        if object and object.Remove then
-            object:Remove()
-        end
-    end,
-    
-    Rainbow = function(speed)
-        return Color3.fromHSV(tick() % speed / speed, 1, 1)
-    end
-}
-
--- Sistema ESP
-local ESP = {
-    CreateESPObject = function(player)
-        if player == LocalPlayer then return end
-        
-        local espObject = {
-            Box = Utility.CreateDrawing("Square", {
-                Thickness = Config.ESP.BoxStyle.Thickness,
-                Color = VisualSettings.ESP.BoxColors.Enemy,
-                Transparency = Config.ESP.BoxStyle.Transparency,
-                Filled = false,
-                Visible = false
-            }),
-            Name = Utility.CreateDrawing("Text", {
-                Size = Config.ESP.TextStyle.Size,
-                Center = true,
-                Outline = Config.ESP.TextStyle.Outline,
-                Color = VisualSettings.ESP.TextColors.Primary,
-                Visible = false
-            }),
-            Distance = Utility.CreateDrawing("Text", {
-                Size = Config.ESP.TextStyle.Size - 1,
-                Center = true,
-                Outline = Config.ESP.TextStyle.Outline,
-                Color = VisualSettings.ESP.TextColors.Secondary,
-                Visible = false
-            }),
-            Tracer = Utility.CreateDrawing("Line", {
-                Thickness = VisualSettings.ESP.TracerStyles.Default.Thickness,
-                Color = VisualSettings.ESP.TracerStyles.Default.Color,
-                Transparency = 1,
-                Visible = false
-            })
-        }
-        
-        Cache.ESP[player] = espObject
-        return espObject
-    end,
-    
-    UpdateESP = function()
-        if not Config.ESP.Enabled then return end
-        
-        for player, espObject in pairs(Cache.ESP) do
-            if not Utility.IsAlive(player) then
-                ESP.HideESP(espObject)
-                continue
-            end
-            
-            local character = player.Character
-            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-            if not humanoidRootPart then
-                ESP.HideESP(espObject)
-                continue
-            end
-            
-            local distance = Utility.GetDistance(humanoidRootPart.Position)
-            if distance > Config.ESP.Performance.MaxDistance then
-                ESP.HideESP(espObject)
-                continue
-            end
-            
-            local vector, onScreen = Utility.WorldToViewport(humanoidRootPart.Position)
-            if not onScreen then
-                ESP.HideESP(espObject)
-                continue
-            end
-            
-            -- Atualizar elementos ESP
-            ESP.UpdateBox(espObject, character, vector)
-            ESP.UpdateText(espObject, player, vector, distance)
-            ESP.UpdateTracer(espObject, vector)
-        end
-    end,
-    
-    UpdateBox = function(espObject, character, vector)
-        local humanoid = character:FindFirstChild("Humanoid")
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
-        
-        if not (humanoid and rootPart) then return end
-        
-        local size = rootPart.Size * Vector3.new(1, 1.5, 1)
-        local width = size.X * 1000 / vector.Z
-        local height = size.Y * 1000 / vector.Z
-        
-        espObject.Box.Size = Vector2.new(width, height)
-        espObject.Box.Position = Vector2.new(vector.X - width/2, vector.Y - height/2)
-        espObject.Box.Visible = true
-        
-        if Config.ESP.Features.RainbowMode then
-            espObject.Box.Color = Utility.Rainbow(Config.ESP.Performance.UpdateRate)
-        end
-    end,
-    
-    UpdateText = function(espObject, player, vector, distance)
-        -- Nome
-        espObject.Name.Text = player.Name
-        espObject.Name.Position = Vector2.new(vector.X, vector.Y - 40)
-        espObject.Name.Visible = true
-        
-        -- Distância
-        if Config.ESP.Features.ShowDistance then
-            espObject.Distance.Text = string.format("[%dm]", math.floor(distance))
-            espObject.Distance.Position = Vector2.new(vector.X, vector.Y + 20)
-            espObject.Distance.Visible = true
-        end
-    end,
-    
-    UpdateTracer = function(espObject, vector)
-        local origin = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
-        
-        espObject.Tracer.From = origin
-        espObject.Tracer.To = Vector2.new(vector.X, vector.Y)
-        espObject.Tracer.Visible = true
-    end,
-    
-    HideESP = function(espObject)
-        for _, object in pairs(espObject) do
-            object.Visible = false
-        end
-    end
-}
-
--- Sistema Aimbot
-local Aimbot = {
-    Target = nil,
-    
-    GetClosestPlayer = function()
-        local closestPlayer = nil
-        local shortestDistance = Config.Aimbot.FOV.Size
-        local mousePos = UserInputService:GetMouseLocation()
-        
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player == LocalPlayer then continue end
-            if not Utility.IsAlive(player) then continue end
-            
-            local character = player.Character
-            local humanoid = character:FindFirstChild("Humanoid")
-            local targetPart = character:FindFirstChild(Config.Aimbot.Target.Part)
-            
-            if not (humanoid and targetPart) then continue end
-            if humanoid.Health <= 0 then continue end
-            
-            if Config.Aimbot.Settings.TeamCheck and player.Team == LocalPlayer.Team then
-                continue
-            end
-            
-            local vector, onScreen = Utility.WorldToViewport(targetPart.Position)
-            if not onScreen then continue end
-            
-            local distance = (Vector2.new(vector.X, vector.Y) - mousePos).Magnitude
-            if distance < shortestDistance then
-                if Config.Aimbot.Settings.VisibilityCheck then
-                    local ray = Ray.new(Camera.CFrame.Position, 
-                        (targetPart.Position - Camera.CFrame.Position).Unit * 1000)
-                    local hit = workspace:FindPartOnRayWithIgnoreList(ray, 
-                        {LocalPlayer.Character, character})
-                    
-                    if hit then continue end
-                end
-                
-                closestPlayer = player
-                shortestDistance = distance
-            end
-        end
-        
-        return closestPlayer
-    end,
-    
-    Update = function()
-        if not Config.Aimbot.Enabled then return end
-        if not UserInputService:IsKeyDown(Config.Aimbot.Target.Lock) then return end
-        
-        local target = Aimbot.GetClosestPlayer()
-        if not target then return end
-        
-        local character = target.Character
-        local targetPart = character:FindFirstChild(Config.Aimbot.Target.Part)
-        if not targetPart then return end
-        
-        local vector, onScreen = Utility.WorldToViewport(targetPart.Position)
-        if not onScreen then return end
-        
-        -- Aplicar previsão se habilitada
-        local targetPos = targetPart.Position
-        if Config.Aimbot.Settings.Prediction.Enabled then
-            targetPos = targetPos + (targetPart.Velocity * Config.Aimbot.Settings.Prediction.Amount)
-        end
-        
-        -- Calcular nova posição da câmera
-        local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-        
-        -- Aplicar suavização
-        Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, Config.Aimbot.Settings.Smoothness)
-    end
-}
-
--- Criar a janela principal
-local Window = Lib:Window({
+-- Criar Interface
+local Window = Library:Window({
     Name = "Premium Script",
     StartupSound = true,
     IntroEnabled = false,
-    IntroText = "Premium Script",
-    IntroIcon = "rbxassetid://6034509993",
     Icon = "rbxassetid://6034509993",
-    IntroBlur = true,
-    IntroBlurIntensity = 15,
-    Theme = "Dark",
-    Position = UDim2.new(0.5, -300, 0.5, -150)
+    Theme = "Dark"
 })
 
--- Criar as abas
+-- Criar Abas
 local Combat = Window:Tab({
     Name = "Combat",
-    Icon = "rbxassetid://7733799682",
-    Color = Color3.fromRGB(255, 0, 85)
+    Icon = "rbxassetid://7733799682"
 })
 
 local Visuals = Window:Tab({
     Name = "Visuals",
-    Icon = "rbxassetid://7733774602",
-    Color = Color3.fromRGB(255, 0, 85)
+    Icon = "rbxassetid://7733774602"
 })
 
 local Settings = Window:Tab({
     Name = "Settings",
-    Icon = "rbxassetid://7734053495",
-    Color = Color3.fromRGB(255, 0, 85)
+    Icon = "rbxassetid://7734053495"
 })
 
--- Seção Aimbot
+-- Aba Combat
 local AimbotSection = Combat:Section({
     Name = "Aimbot",
     Side = "Left"
@@ -571,30 +82,37 @@ AimbotSection:Toggle({
     end
 })
 
+AimbotSection:Toggle({
+    Name = "Team Check",
+    Flag = "TeamCheck",
+    Default = true,
+    Callback = function(Value)
+        Config.Aimbot.TeamCheck = Value
+    end
+})
+
 AimbotSection:Slider({
     Name = "Smoothness",
     Flag = "AimbotSmoothness",
-    Default = 0.5,
-    Min = 0,
-    Max = 1,
-    Increment = 0.1,
+    Default = 50,
+    Min = 1,
+    Max = 100,
     Callback = function(Value)
-        Config.Aimbot.Settings.Smoothness = Value
+        Config.Aimbot.Smoothness = Value / 100
     end
 })
 
 AimbotSection:Dropdown({
-    Name = "Target Part",
-    Flag = "AimbotTargetPart",
+    Name = "Aim Part",
+    Flag = "AimPart",
     Default = "Head",
-    Items = {"Head", "HumanoidRootPart", "Torso", "Random"},
-    Multi = false,
+    Options = {"Head", "UpperTorso", "HumanoidRootPart"},
     Callback = function(Value)
-        Config.Aimbot.Target.Part = Value
+        Config.Aimbot.AimPart = Value
     end
 })
 
--- Seção ESP
+-- Aba Visuals
 local ESPSection = Visuals:Section({
     Name = "ESP",
     Side = "Left"
@@ -610,120 +128,149 @@ ESPSection:Toggle({
 })
 
 ESPSection:Toggle({
-    Name = "Box ESP",
-    Flag = "BoxESP",
+    Name = "Show Box",
+    Flag = "ShowBox",
     Default = true,
     Callback = function(Value)
-        Config.ESP.BoxStyle.Enabled = Value
+        Config.ESP.ShowBox = Value
     end
 })
 
 ESPSection:Toggle({
-    Name = "Show Names",
-    Flag = "ShowNames",
+    Name = "Show Health",
+    Flag = "ShowHealth",
     Default = true,
     Callback = function(Value)
-        Config.ESP.TextStyle.ShowName = Value
+        Config.ESP.ShowHealth = Value
+    end
+})
+
+ESPSection:Toggle({
+    Name = "Show Name",
+    Flag = "ShowName",
+    Default = true,
+    Callback = function(Value)
+        Config.ESP.ShowName = Value
     end
 })
 
 ESPSection:ColorPicker({
     Name = "ESP Color",
-    Flag = "ESPChoice",
-    Default = Color3.fromRGB(255, 0, 85),
+    Flag = "ESPColor",
+    Default = Color3.fromRGB(255, 0, 0),
     Callback = function(Value)
-        Config.ESP.BoxStyle.Color = Value
+        Config.ESP.BoxColor = Value
     end
 })
 
--- Seção Performance
-local PerformanceSection = Settings:Section({
-    Name = "Performance",
+-- Aba Settings
+local SettingsSection = Settings:Section({
+    Name = "Settings",
     Side = "Left"
 })
 
-PerformanceSection:Slider({
-    Name = "Update Rate",
-    Flag = "UpdateRate",
-    Default = 60,
-    Min = 15,
-    Max = 144,
-    Increment = 1,
-    Callback = function(Value)
-        Performance.UpdateRate = 1 / Value
-    end
-})
-
-local ConfigSection = Settings:Section({
-    Name = "Configuration",
-    Side = "Left"
-})
-
-ConfigSection:Button({
-    Name = "Save Config",
-    Flag = "SaveConfig",
+SettingsSection:Button({
+    Name = "Reset All Settings",
     Callback = function()
-        -- Implementar salvamento
-        Lib:Notify({
-            Title = "Success",
-            Content = "Configuration saved!",
+        -- Resetar configurações
+        Library:Notify({
+            Title = "Settings",
+            Content = "All settings have been reset!",
             Duration = 3
         })
     end
 })
 
-ConfigSection:Button({
-    Name = "Load Config",
-    Flag = "LoadConfig",
-    Callback = function()
-        -- Implementar carregamento
-        Lib:Notify({
-            Title = "Success",
-            Content = "Configuration loaded!",
-            Duration = 3
-        })
+-- Funções ESP
+local function CreateESP(player)
+    local esp = {
+        Box = Drawing.new("Square"),
+        Name = Drawing.new("Text"),
+        Health = Drawing.new("Text"),
+        Distance = Drawing.new("Text")
+    }
+    
+    esp.Box.Thickness = 1
+    esp.Box.Filled = false
+    esp.Box.Color = Config.ESP.BoxColor
+    esp.Box.Visible = false
+    
+    esp.Name.Size = 13
+    esp.Name.Center = true
+    esp.Name.Outline = true
+    esp.Name.Color = Config.ESP.TextColor
+    esp.Name.Visible = false
+    
+    esp.Health.Size = 13
+    esp.Health.Center = true
+    esp.Health.Outline = true
+    esp.Health.Color = Config.ESP.TextColor
+    esp.Health.Visible = false
+    
+    esp.Distance.Size = 13
+    esp.Distance.Center = true
+    esp.Distance.Outline = true
+    esp.Distance.Color = Config.ESP.TextColor
+    esp.Distance.Visible = false
+    
+    return esp
+end
+
+-- Funções Aimbot
+local function GetClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = Config.Aimbot.FOVSize
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player == LocalPlayer then continue end
+        if Config.Aimbot.TeamCheck and player.Team == LocalPlayer.Team then continue end
+        
+        local character = player.Character
+        if not character then continue end
+        
+        local humanoid = character:FindFirstChild("Humanoid")
+        if not humanoid or humanoid.Health <= 0 then continue end
+        
+        local part = character:FindFirstChild(Config.Aimbot.AimPart)
+        if not part then continue end
+        
+        local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
+        if not onScreen then continue end
+        
+        local distance = (Vector2.new(pos.X, pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+        if distance < shortestDistance then
+            closestPlayer = player
+            shortestDistance = distance
+        end
     end
-})
+    
+    return closestPlayer
+end
 
--- Seção Keybinds
-local KeybindSection = Settings:Section({
-    Name = "Keybinds",
-    Side = "Left"
-})
-
-KeybindSection:Keybind({
-    Name = "Toggle UI",
-    Flag = "ToggleUI",
-    Default = Enum.KeyCode.RightShift,
-    Callback = function()
-        -- Toggle UI visibility
+-- Loop Principal
+RunService.RenderStepped:Connect(function()
+    -- Aimbot
+    if Config.Aimbot.Enabled and UserInputService:IsKeyDown(Enum.KeyCode.E) then
+        local target = GetClosestPlayer()
+        if target then
+            local character = target.Character
+            local part = character:FindFirstChild(Config.Aimbot.AimPart)
+            if part then
+                local pos = Camera:WorldToViewportPoint(part.Position)
+                local targetPos = Vector2.new(pos.X, pos.Y)
+                local mousePos = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+                mousemoverel(
+                    (targetPos.X - mousePos.X) * Config.Aimbot.Smoothness,
+                    (targetPos.Y - mousePos.Y) * Config.Aimbot.Smoothness
+                )
+            end
+        end
     end
-})
+end)
 
--- Seção Informações
-local InfoSection = Settings:Section({
-    Name = "Information",
-    Side = "Left"
-})
-
-InfoSection:Paragraph({
-    Name = "Script Info",
-    Content = "Version: 2.1.0\nLast Updated: 2024"
-})
-
--- Inicializar a interface
-Window:SelectTab(1)
-
--- Notificação inicial
-Lib:Notify({
+-- Notificação Inicial
+Library:Notify({
     Title = "Script Loaded",
     Content = "Welcome to Premium Script!",
     Duration = 5
-})
-
--- Loop principal
-RunService.RenderStepped:Connect(function()
-    if Performance:ShouldUpdate() then
-        -- Atualizar ESP e Aimbot
-    end
-end) 
+}) 
