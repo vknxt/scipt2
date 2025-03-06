@@ -2,7 +2,7 @@
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
 local UI = Lib:Create{
     Theme = "Dark",
-    Size = UDim2.new(0, 700, 0, 500), -- Tamanho aumentado
+    Size = UDim2.new(0, 700, 0, 500),
     Title = "⭐ Premium ESP & Aimbot ⭐"
 }
 
@@ -16,8 +16,8 @@ MainTab:Label{ Text = "✨ Welcome to Premium ESP & Aimbot Tool ✨" }
 MainTab:Label{ Text = "💫 Customize your settings for the best experience:" }
 
 -- Variáveis de controle
-local espEnabled = false
-local aimbotEnabled = false
+_G.espEnabled = false
+_G.aimbotEnabled = false
 local espColor = Color3.fromRGB(0, 255, 0)
 local espSize = Vector3.new(4, 6, 1)
 local aimbotSensitivity = 0.5
@@ -27,7 +27,7 @@ local function drawESP(player)
     if player and player ~= game.Players.LocalPlayer and player.Character then
         -- Remove ESP existente
         for _, v in pairs(player.Character:GetChildren()) do
-            if v:IsA("BoxHandleAdornment") then
+            if v:IsA("BoxHandleAdornment") or v:IsA("BillboardGui") then
                 v:Destroy()
             end
         end
@@ -61,44 +61,48 @@ end
 
 -- Função melhorada para atualizar ESP
 local function updateESP()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            drawESP(player)
+    while _G.espEnabled do
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer then
+                drawESP(player)
+            end
         end
+        wait(0.1)
     end
 end
 
 -- Função aprimorada de aimbot com suavização
 local function aimbot()
-    local closestPlayer = nil
-    local shortestDistance = math.huge
-    local localPlayer = game.Players.LocalPlayer
-    
-    if not localPlayer.Character or not localPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        return
-    end
+    while _G.aimbotEnabled do
+        local closestPlayer = nil
+        local shortestDistance = math.huge
+        local localPlayer = game.Players.LocalPlayer
+        
+        if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            for _, player in pairs(game.Players:GetPlayers()) do
+                if player ~= localPlayer and player.Character and 
+                   player.Character:FindFirstChild("Head") and 
+                   player.Character:FindFirstChild("Humanoid") and
+                   player.Character.Humanoid.Health > 0 then
+                    
+                    local distance = (player.Character.Head.Position - localPlayer.Character.Head.Position).magnitude
+                    if distance < shortestDistance then
+                        closestPlayer = player
+                        shortestDistance = distance
+                    end
+                end
+            end
 
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= localPlayer and player.Character and 
-           player.Character:FindFirstChild("Head") and 
-           player.Character:FindFirstChild("Humanoid") and
-           player.Character.Humanoid.Health > 0 then
-            
-            local distance = (player.Character.Head.Position - localPlayer.Character.Head.Position).magnitude
-            if distance < shortestDistance then
-                closestPlayer = player
-                shortestDistance = distance
+            if closestPlayer and closestPlayer.Character then
+                local headPosition = closestPlayer.Character.Head.Position
+                local currentCFrame = localPlayer.Character.HumanoidRootPart.CFrame
+                local targetCFrame = CFrame.new(currentCFrame.Position, headPosition)
+                
+                -- Suavização do movimento
+                localPlayer.Character.HumanoidRootPart.CFrame = currentCFrame:Lerp(targetCFrame, aimbotSensitivity)
             end
         end
-    end
-
-    if closestPlayer and closestPlayer.Character then
-        local headPosition = closestPlayer.Character.Head.Position
-        local currentCFrame = localPlayer.Character.HumanoidRootPart.CFrame
-        local targetCFrame = CFrame.new(currentCFrame.Position, headPosition)
-        
-        -- Suavização do movimento
-        localPlayer.Character.HumanoidRootPart.CFrame = currentCFrame:Lerp(targetCFrame, aimbotSensitivity)
+        wait(0.01)
     end
 end
 
@@ -107,14 +111,9 @@ ESPSection:Toggle{
     Name = "🟢 Enable ESP",
     Default = false,
     Callback = function(state)
-        espEnabled = state
-        if espEnabled then
-            spawn(function()
-                while espEnabled do
-                    updateESP()
-                    wait(0.1)
-                end
-            end)
+        _G.espEnabled = state
+        if state then
+            coroutine.wrap(updateESP)()
         else
             -- Limpa todas as caixas ESP
             for _, player in pairs(game.Players:GetPlayers()) do
@@ -134,14 +133,9 @@ AimbotSection:Toggle{
     Name = "🎯 Enable Aimbot",
     Default = false,
     Callback = function(state)
-        aimbotEnabled = state
-        if aimbotEnabled then
-            spawn(function()
-                while aimbotEnabled do
-                    aimbot()
-                    wait(0.01)
-                end
-            end)
+        _G.aimbotEnabled = state
+        if state then
+            coroutine.wrap(aimbot)()
         end
     end
 }
