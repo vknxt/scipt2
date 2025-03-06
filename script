@@ -8,7 +8,8 @@ local Config = {
         AtualizacaoDelay = 0.05, -- Atualiza mais rápido
         MostrarNomes = true,
         MostrarDistancia = true,
-        MostrarVida = true
+        MostrarVida = true,
+        Estilo = Enum.Material.Neon -- Novo parâmetro para deixar o ESP mais bonito
     },
     Aimbot = {
         Ativado = true,
@@ -36,7 +37,7 @@ local function desenharESP(jogador)
             end
         end
         
-        -- Cria uma linha em volta do personagem
+        -- Cria um contorno em volta do personagem
         local contorno = Instance.new("BoxHandleAdornment")
         contorno.Size = Config.ESP.Tamanho + Vector3.new(0.2, 0.2, 0.2) -- Aumenta o tamanho para criar um contorno
         contorno.Adornee = jogador.Character
@@ -44,6 +45,7 @@ local function desenharESP(jogador)
         contorno.AlwaysOnTop = true
         contorno.ZIndex = 10
         contorno.Transparency = Config.ESP.Transparencia
+        contorno.Material = Config.ESP.Estilo -- Aplica o novo estilo
         contorno.Parent = jogador.Character
         
         -- Exibe informações do jogador
@@ -62,13 +64,8 @@ local function desenharESP(jogador)
             info.TextScaled = true
             info.TextStrokeTransparency = 0.5 -- Adiciona contorno ao texto
             
-            local distancia = 0
-            local vida = 0
-            
-            pcall(function()
-                distancia = math.floor((game.Players.LocalPlayer.Character.Head.Position - jogador.Character.Head.Position).Magnitude)
-                vida = math.floor(jogador.Character:FindFirstChild("Humanoid") and jogador.Character.Humanoid.Health or 0)
-            end)
+            local distancia = math.floor((game.Players.LocalPlayer.Character.Head.Position - jogador.Character.Head.Position).Magnitude)
+            local vida = math.floor(jogador.Character:FindFirstChild("Humanoid") and jogador.Character.Humanoid.Health or 0)
             
             info.Text = string.format("%s\nDist: %d\nHP: %d%%", jogador.Name, distancia, vida)
             info.Parent = infoPanel
@@ -94,57 +91,62 @@ task.spawn(atualizarESP)
 
 -- Função do Aimbot
 local function aimbot()
-    while Config.Aimbot.Ativado do
-        pcall(function()
-            local jogadorLocal = game.Players.LocalPlayer
-            if not (jogadorLocal and jogadorLocal.Character and jogadorLocal.Character:FindFirstChild("HumanoidRootPart")) then 
-                return 
-            end
-            
-            local jogadorMaisProximo, menorDistancia = nil, Config.Aimbot.AlcanceMaximo
-            
-            for _, jogador in ipairs(game.Players:GetPlayers()) do
-                if  jogador ~= jogadorLocal and 
-                    jogador.Character and 
-                    jogador.Character:FindFirstChild("Head") and 
-                    jogador.Character:FindFirstChild("Humanoid") and 
-                    jogador.Character.Humanoid.Health > 0 and 
-                    jogador.Team ~= jogadorLocal.Team then -- Não mira em jogadores do mesmo time
+    local UserInputService = game:GetService("UserInputService")
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and not gameProcessed then
+            while Config.Aimbot.Ativado do
+                pcall(function()
+                    local jogadorLocal = game.Players.LocalPlayer
+                    if not (jogadorLocal and jogadorLocal.Character and jogadorLocal.Character:FindFirstChild("HumanoidRootPart")) then 
+                        return 
+                    end
                     
-                    local distancia = (jogador.Character.Head.Position - jogadorLocal.Character.Head.Position).Magnitude
-                    if distancia < menorDistancia then
-                        jogadorMaisProximo = jogador
-                        menorDistancia = distancia
+                    local jogadorMaisProximo, menorDistancia = nil, Config.Aimbot.AlcanceMaximo
+                    
+                    for _, jogador in ipairs(game.Players:GetPlayers()) do
+                        if  jogador ~= jogadorLocal and 
+                            jogador.Character and 
+                            jogador.Character:FindFirstChild("Head") and 
+                            jogador.Character:FindFirstChild("Humanoid") and 
+                            jogador.Character.Humanoid.Health > 0 and 
+                            jogador.Team ~= jogadorLocal.Team then -- Não mira em jogadores do mesmo time
+                            
+                            local distancia = (jogador.Character.Head.Position - jogadorLocal.Character.Head.Position).Magnitude
+                            if distancia < menorDistancia then
+                                jogadorMaisProximo = jogador
+                                menorDistancia = distancia
+                            end
+                        end
                     end
-                end
-            end
 
-            if jogadorMaisProximo and jogadorMaisProximo.Character then
-                local alvo = Config.Aimbot.MiraNaCabeca and 
-                            jogadorMaisProximo.Character.Head.Position or 
-                            jogadorMaisProximo.Character.HumanoidRootPart.Position
-                
-                local framePosicaoAtual = jogadorLocal.Character.HumanoidRootPart.CFrame
-                local frameAlvo = CFrame.new(framePosicaoAtual.Position, alvo)
-                
-                -- Silent Aim
-                if Config.Aimbot.SilentAim then
-                    local anguloAjustado = (alvo - framePosicaoAtual.Position).unit * Config.Aimbot.AjusteDeAngulo
-                    jogadorLocal.Character.HumanoidRootPart.CFrame = CFrame.new(framePosicaoAtual.Position) * CFrame.Angles(0, math.atan2(anguloAjustado.Z, anguloAjustado.X), 0)
-                else
-                    -- Melhorar a suavização do movimento
-                    if Config.Aimbot.SuavizacaoMovimento then
-                        local suavizacao = Config.Aimbot.Sensibilidade * (1 / (1 + menorDistancia / Config.Aimbot.AlcanceMaximo))
-                        jogadorLocal.Character.HumanoidRootPart.CFrame = 
-                            CFrame.new(framePosicaoAtual.Position):Lerp(frameAlvo, suavizacao)
-                    else
-                        jogadorLocal.Character.HumanoidRootPart.CFrame = frameAlvo
+                    if jogadorMaisProximo and jogadorMaisProximo.Character then
+                        local alvo = Config.Aimbot.MiraNaCabeca and 
+                                    jogadorMaisProximo.Character.Head.Position or 
+                                    jogadorMaisProximo.Character.HumanoidRootPart.Position
+                        
+                        local framePosicaoAtual = jogadorLocal.Character.HumanoidRootPart.CFrame
+                        local frameAlvo = CFrame.new(framePosicaoAtual.Position, alvo)
+                        
+                        -- Silent Aim
+                        if Config.Aimbot.SilentAim then
+                            local anguloAjustado = (alvo - framePosicaoAtual.Position).unit * Config.Aimbot.AjusteDeAngulo
+                            jogadorLocal.Character.HumanoidRootPart.CFrame = CFrame.new(framePosicaoAtual.Position) * CFrame.Angles(0, math.atan2(anguloAjustado.Z, anguloAjustado.X), 0)
+                        else
+                            -- Melhorar a suavização do movimento
+                            if Config.Aimbot.SuavizacaoMovimento then
+                                local suavizacao = Config.Aimbot.Sensibilidade * (1 / (1 + menorDistancia / Config.Aimbot.AlcanceMaximo))
+                                jogadorLocal.Character.HumanoidRootPart.CFrame = 
+                                    CFrame.new(framePosicaoAtual.Position):Lerp(frameAlvo, suavizacao)
+                            else
+                                jogadorLocal.Character.HumanoidRootPart.CFrame = frameAlvo
+                            end
+                        end
                     end
-                end
+                end)
+                task.wait(Config.Aimbot.AtualizacaoDelay)
             end
-        end)
-        task.wait(Config.Aimbot.AtualizacaoDelay)
-    end
+        end
+    end)
 end
 
 task.spawn(aimbot)
