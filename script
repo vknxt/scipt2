@@ -1,12 +1,12 @@
 --[[
-    ╔═══╗─────────╔╗────────╔═══╗
-    ║╔═╗║────────╔╝╚╗───────║╔═╗║
-    ║╚══╦══╦══╦═╗╠╗╔╬══╦╗╔╗─║╚═╝╠══╦═╗
-    ╚══╗║╔═╣║═╣╔╗╣║║║╔╗║╚╝║─║╔══╣╔╗║╔╝
-    ║╚═╝║╚═╣║═╣║║║║╚╣╔╗║║║║─║║──║╚╝║║
-    ╚═══╩══╩══╩╝╚╝╚═╩╝╚╩╩╩╝─╚╝──╚══╩╝
+    ╔═╗╔═╗╔═══╗───────╔═══╗╔═══╗╔═══╗╔╗───╔═══╗
+    ║║╚╝║║║╔═╗║───────║╔═╗║║╔═╗║║╔═╗║║║───║╔═╗║
+    ║╔╗╔╗║║║─║║╔══╗───║║─╚╝║║─║║║║─║║║║───║║─║║
+    ║║║║║║║╚═╝║╚═╗║───║║─╔╗║╚═╝║║╚═╝║║║─╔╗║╚═╝║
+    ║║║║║║║╔═╗║╔═╝║───║╚═╝║║╔═╗║║╔═╗║║╚═╝║║╔═╗║
+    ╚╝╚╝╚╝╚╝─╚╝╚══╝───╚═══╝╚╝─╚╝╚╝─╚╝╚═══╝╚╝─╚╝
     
-    Premium Script v3.0.0
+    CPX Script v3.0.0
 ]]
 
 -- Aguardar carregamento
@@ -51,10 +51,10 @@ local Config = {
 
 -- Criar janela principal
 local Window = OrionLib:MakeWindow({
-    Name = "Premium Script", 
+    Name = "CPX Script", 
     HidePremium = true,
     SaveConfig = true, 
-    ConfigFolder = "PremiumScript"
+    ConfigFolder = "CPXScript"
 })
 
 -- Criar abas
@@ -193,7 +193,7 @@ SettingsSection:AddKeybind({
     Save = true,
     Flag = "toggleUI",
     Callback = function()
-        -- A UI será alternada automaticamente
+        OrionLib:ToggleUI()
     end    
 })
 
@@ -262,7 +262,7 @@ OrionLib:Init()
 -- Notificação inicial
 OrionLib:MakeNotification({
     Name = "Script Loaded",
-    Content = "Premium Script v3.0.0 loaded successfully!",
+    Content = "CPX Script v3.0.0 loaded successfully!",
     Image = "rbxassetid://4483345998",
     Time = 5
 }) 
