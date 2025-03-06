@@ -6,11 +6,17 @@
     ║╚═╝║╚═╣║═╣║║║║╚╣╔╗║║║║─║║──║╚╝║║
     ╚═══╩══╩══╩╝╚╝╚═╩╝╚╩╩╩╝─╚╝──╚══╩╝
     
-    Premium Script v2.1.0
+    Premium Script v3.0.0
 ]]
 
 -- Aguardar carregamento
-repeat task.wait() until game:IsLoaded()
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+-- Anti execução múltipla
+if getgenv().PremiumLoaded then return end
+getgenv().PremiumLoaded = true
 
 -- Serviços
 local Players = game:GetService("Players")
@@ -19,17 +25,17 @@ local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- Carregar UI Library
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
+-- Carregar UI Library (usando Orion Library por ser mais estável)
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 -- Configurações
 local Config = {
     ESP = {
         Enabled = false,
-        ShowBox = true,
-        ShowHealth = true,
-        ShowName = true,
-        ShowDistance = true,
+        BoxEnabled = true,
+        NameEnabled = true,
+        HealthEnabled = true,
+        DistanceEnabled = true,
         BoxColor = Color3.fromRGB(255, 0, 0),
         TextColor = Color3.fromRGB(255, 255, 255)
     },
@@ -38,189 +44,172 @@ local Config = {
         TeamCheck = true,
         Smoothness = 0.5,
         AimPart = "Head",
-        FOVSize = 100
+        FOVSize = 100,
+        ToggleKey = Enum.KeyCode.RightMouse
     }
 }
 
--- Criar Interface
-local Window = Library:Window({
-    Name = "Premium Script",
-    StartupSound = true,
-    IntroEnabled = false,
-    Icon = "rbxassetid://6034509993",
-    Theme = "Dark"
+-- Criar janela principal
+local Window = OrionLib:MakeWindow({
+    Name = "Premium Script", 
+    HidePremium = true,
+    SaveConfig = true, 
+    ConfigFolder = "PremiumScript"
 })
 
--- Criar Abas
-local Combat = Window:Tab({
+-- Criar abas
+local CombatTab = Window:MakeTab({
     Name = "Combat",
-    Icon = "rbxassetid://7733799682"
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
 
-local Visuals = Window:Tab({
+local VisualsTab = Window:MakeTab({
     Name = "Visuals",
-    Icon = "rbxassetid://7733774602"
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
 
-local Settings = Window:Tab({
+local SettingsTab = Window:MakeTab({
     Name = "Settings",
-    Icon = "rbxassetid://7734053495"
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
 
--- Aba Combat
-local AimbotSection = Combat:Section({
-    Name = "Aimbot",
-    Side = "Left"
+-- Seção Aimbot
+local AimbotSection = CombatTab:AddSection({
+    Name = "Aimbot"
 })
 
-AimbotSection:Toggle({
+AimbotSection:AddToggle({
     Name = "Enable Aimbot",
-    Flag = "AimbotEnabled",
     Default = false,
+    Save = true,
+    Flag = "aimbotEnabled",
     Callback = function(Value)
         Config.Aimbot.Enabled = Value
-    end
+    end    
 })
 
-AimbotSection:Toggle({
+AimbotSection:AddToggle({
     Name = "Team Check",
-    Flag = "TeamCheck",
     Default = true,
+    Save = true,
+    Flag = "teamCheck",
     Callback = function(Value)
         Config.Aimbot.TeamCheck = Value
-    end
+    end    
 })
 
-AimbotSection:Slider({
+AimbotSection:AddSlider({
     Name = "Smoothness",
-    Flag = "AimbotSmoothness",
-    Default = 50,
     Min = 1,
     Max = 100,
+    Default = 50,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    Save = true,
+    Flag = "aimbotSmoothness",
     Callback = function(Value)
         Config.Aimbot.Smoothness = Value / 100
-    end
+    end    
 })
 
-AimbotSection:Dropdown({
+AimbotSection:AddDropdown({
     Name = "Aim Part",
-    Flag = "AimPart",
     Default = "Head",
     Options = {"Head", "UpperTorso", "HumanoidRootPart"},
+    Save = true,
+    Flag = "aimPart",
     Callback = function(Value)
         Config.Aimbot.AimPart = Value
-    end
+    end    
 })
 
--- Aba Visuals
-local ESPSection = Visuals:Section({
-    Name = "ESP",
-    Side = "Left"
+-- Seção ESP
+local ESPSection = VisualsTab:AddSection({
+    Name = "ESP"
 })
 
-ESPSection:Toggle({
+ESPSection:AddToggle({
     Name = "Enable ESP",
-    Flag = "ESPEnabled",
     Default = false,
+    Save = true,
+    Flag = "espEnabled",
     Callback = function(Value)
         Config.ESP.Enabled = Value
-    end
+    end    
 })
 
-ESPSection:Toggle({
-    Name = "Show Box",
-    Flag = "ShowBox",
+ESPSection:AddToggle({
+    Name = "Box ESP",
     Default = true,
+    Save = true,
+    Flag = "boxEnabled",
     Callback = function(Value)
-        Config.ESP.ShowBox = Value
-    end
+        Config.ESP.BoxEnabled = Value
+    end    
 })
 
-ESPSection:Toggle({
-    Name = "Show Health",
-    Flag = "ShowHealth",
+ESPSection:AddToggle({
+    Name = "Name ESP",
     Default = true,
+    Save = true,
+    Flag = "nameEnabled",
     Callback = function(Value)
-        Config.ESP.ShowHealth = Value
-    end
+        Config.ESP.NameEnabled = Value
+    end    
 })
 
-ESPSection:Toggle({
-    Name = "Show Name",
-    Flag = "ShowName",
+ESPSection:AddToggle({
+    Name = "Health ESP",
     Default = true,
+    Save = true,
+    Flag = "healthEnabled",
     Callback = function(Value)
-        Config.ESP.ShowName = Value
-    end
+        Config.ESP.HealthEnabled = Value
+    end    
 })
 
-ESPSection:ColorPicker({
+ESPSection:AddColorpicker({
     Name = "ESP Color",
-    Flag = "ESPColor",
     Default = Color3.fromRGB(255, 0, 0),
+    Save = true,
+    Flag = "espColor",
     Callback = function(Value)
         Config.ESP.BoxColor = Value
-    end
+    end  
 })
 
--- Aba Settings
-local SettingsSection = Settings:Section({
-    Name = "Settings",
-    Side = "Left"
+-- Seção Settings
+local SettingsSection = SettingsTab:AddSection({
+    Name = "Settings"
 })
 
-SettingsSection:Button({
-    Name = "Reset All Settings",
+SettingsSection:AddKeybind({
+    Name = "Toggle UI",
+    Default = Enum.KeyCode.RightShift,
+    Hold = false,
+    Save = true,
+    Flag = "toggleUI",
     Callback = function()
-        -- Resetar configurações
-        Library:Notify({
-            Title = "Settings",
-            Content = "All settings have been reset!",
-            Duration = 3
-        })
-    end
+        -- A UI será alternada automaticamente
+    end    
 })
 
--- Funções ESP
-local function CreateESP(player)
-    local esp = {
-        Box = Drawing.new("Square"),
-        Name = Drawing.new("Text"),
-        Health = Drawing.new("Text"),
-        Distance = Drawing.new("Text")
-    }
-    
-    esp.Box.Thickness = 1
-    esp.Box.Filled = false
-    esp.Box.Color = Config.ESP.BoxColor
-    esp.Box.Visible = false
-    
-    esp.Name.Size = 13
-    esp.Name.Center = true
-    esp.Name.Outline = true
-    esp.Name.Color = Config.ESP.TextColor
-    esp.Name.Visible = false
-    
-    esp.Health.Size = 13
-    esp.Health.Center = true
-    esp.Health.Outline = true
-    esp.Health.Color = Config.ESP.TextColor
-    esp.Health.Visible = false
-    
-    esp.Distance.Size = 13
-    esp.Distance.Center = true
-    esp.Distance.Outline = true
-    esp.Distance.Color = Config.ESP.TextColor
-    esp.Distance.Visible = false
-    
-    return esp
+-- Funções Utilitárias
+local function GetDistance(position)
+    local character = LocalPlayer.Character
+    if not character then return 0 end
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return 0 end
+    return (position - humanoidRootPart.Position).Magnitude
 end
 
--- Funções Aimbot
 local function GetClosestPlayer()
     local closestPlayer = nil
     local shortestDistance = Config.Aimbot.FOVSize
-    
+
     for _, player in pairs(Players:GetPlayers()) do
         if player == LocalPlayer then continue end
         if Config.Aimbot.TeamCheck and player.Team == LocalPlayer.Team then continue end
@@ -249,8 +238,7 @@ end
 
 -- Loop Principal
 RunService.RenderStepped:Connect(function()
-    -- Aimbot
-    if Config.Aimbot.Enabled and UserInputService:IsKeyDown(Enum.KeyCode.E) then
+    if Config.Aimbot.Enabled and UserInputService:IsKeyDown(Config.Aimbot.ToggleKey) then
         local target = GetClosestPlayer()
         if target then
             local character = target.Character
@@ -268,9 +256,13 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Notificação Inicial
-Library:Notify({
-    Title = "Script Loaded",
-    Content = "Welcome to Premium Script!",
-    Duration = 5
+-- Inicialização
+OrionLib:Init()
+
+-- Notificação inicial
+OrionLib:MakeNotification({
+    Name = "Script Loaded",
+    Content = "Premium Script v3.0.0 loaded successfully!",
+    Image = "rbxassetid://4483345998",
+    Time = 5
 }) 
