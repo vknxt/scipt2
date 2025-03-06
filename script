@@ -1,0 +1,775 @@
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+-- Error Handling
+local function SafeCall(func, ...)
+    local success, result = pcall(func, ...)
+    if not success then
+        warn("Error in function call: " .. tostring(result))
+        return nil
+    end
+    return result
+end
+
+-- Anti-Cheat Bypass (Basic)
+local mt = getrawmetatable(game)
+local old = mt.__namecall
+setreadonly(mt, false)
+mt.__namecall = newcclosure(function(...)
+    local args = {...}
+    local method = getnamecallmethod()
+    if method == "FireServer" or method == "InvokeServer" then
+        -- Add your bypass logic here
+        return old(...)
+    end
+    return old(...)
+end)
+setreadonly(mt, true)
+
+-- Configuration
+local Config = {
+    ESP = {
+        Enabled = false,
+        BoxColor = Color3.fromRGB(255, 0, 0),
+        BoxThickness = 1,
+        BoxTransparency = 1,
+        TextColor = Color3.fromRGB(255, 255, 255),
+        TextSize = 14,
+        TextOutline = true,
+        TracerColor = Color3.fromRGB(255, 0, 0),
+        TracerThickness = 1,
+        TracerOrigin = "Bottom",
+        ShowDistance = true,
+        ShowHealth = true,
+        ShowTeam = true,
+        ShowWeapon = true,
+        ShowBoundingBox = true,
+        ShowSkeleton = true,
+        RainbowMode = false,
+        RainbowSpeed = 1,
+        MaxDistance = 1000,
+        TeamColorBased = true,
+        HighlightTarget = true,
+        BoxStyle = "Corner"
+    },
+    Aimbot = {
+        Enabled = false,
+        TeamCheck = true,
+        VisibilityCheck = true,
+        Smoothness = 0.5,
+        FovSize = 150,
+        ShowFOV = true,
+        FovColor = Color3.fromRGB(255, 255, 255),
+        TargetPart = "Head",
+        TriggerKey = Enum.KeyCode.E,
+        ToggleKey = Enum.KeyCode.Q,
+        PredictionEnabled = true,
+        PredictionAmount = 0.15,
+        AutoShoot = false,
+        AutoWall = false,
+        SilentAim = false,
+        Sensitivity = 1,
+        LockMode = "Hold",
+        TargetMode = "Closest"
+    },
+    UI = {
+        MainColor = Color3.fromRGB(30, 30, 30),
+        AccentColor = Color3.fromRGB(255, 0, 0),
+        TextColor = Color3.fromRGB(255, 255, 255),
+        FontFamily = Enum.Font.GothamBold
+    },
+    Misc = {
+        NoRecoil = false,
+        NoSpread = false,
+        RapidFire = false,
+        WallCheck = true,
+        HeadOnly = false,
+        AutoReload = false,
+        InfiniteJump = false,
+        BunnyHop = false,
+        SpeedMultiplier = 1,
+        JumpPower = 50
+    }
+}
+
+-- Cache System
+local Cache = {
+    ESP = {},
+    Connections = {},
+    DrawingObjects = {},
+    LastUpdate = 0,
+    UpdateInterval = 0.1
+}
+
+-- Utility Functions
+local Utility = {
+    IsAlive = function(player)
+        local character = player.Character
+        local humanoid = character and character:FindFirstChild("Humanoid")
+        return character and humanoid and humanoid.Health > 0
+    end,
+    
+    GetDistance = function(position)
+        return (Camera.CFrame.Position - position).Magnitude
+    end,
+    
+    WorldToViewport = function(position)
+        return SafeCall(function()
+            return Camera:WorldToViewportPoint(position)
+        end)
+    end,
+    
+    CreateDrawing = function(type, properties)
+        local object = Drawing.new(type)
+        for property, value in pairs(properties) do
+            object[property] = value
+        end
+        return object
+    end,
+    
+    DestroyDrawing = function(object)
+        if object and object.Remove then
+            SafeCall(function()
+                object:Remove()
+            end)
+        end
+    end
+}
+
+-- ESP System
+local ESP = {
+    CreateESPObject = function(player)
+        if Cache.ESP[player] then return Cache.ESP[player] end
+        
+        local espObject = {
+            Box = Utility.CreateDrawing("Square", {
+                Thickness = Config.ESP.BoxThickness,
+                Filled = false,
+                Transparency = Config.ESP.BoxTransparency,
+                Color = Config.ESP.BoxColor,
+                Visible = false
+            }),
+            Name = Utility.CreateDrawing("Text", {
+                Size = Config.ESP.TextSize,
+                Center = true,
+                Outline = Config.ESP.TextOutline,
+                Color = Config.ESP.TextColor,
+                Visible = false
+            }),
+            Distance = Utility.CreateDrawing("Text", {
+                Size = Config.ESP.TextSize - 2,
+                Center = true,
+                Outline = Config.ESP.TextOutline,
+                Color = Config.ESP.TextColor,
+                Visible = false
+            }),
+            Tracer = Utility.CreateDrawing("Line", {
+                Thickness = Config.ESP.TracerThickness,
+                Color = Config.ESP.TracerColor,
+                Visible = false
+            })
+        }
+        
+        Cache.ESP[player] = espObject
+        return espObject
+    end,
+    
+    UpdateESP = function()
+        for player, espObject in pairs(Cache.ESP) do
+            if not Utility.IsAlive(player) then
+                ESP.RemoveESP(player)
+                continue
+            end
+            
+            local character = player.Character
+            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+            if not humanoidRootPart then continue end
+            
+            local distance = Utility.GetDistance(humanoidRootPart.Position)
+            if distance > Config.ESP.MaxDistance then
+                ESP.HideESP(espObject)
+                continue
+            end
+            
+            local vector, onScreen = Utility.WorldToViewport(humanoidRootPart.Position)
+            if not onScreen then
+                ESP.HideESP(espObject)
+                continue
+            end
+            
+            -- Update ESP elements
+            ESP.UpdateBox(espObject, character, vector)
+            ESP.UpdateText(espObject, player, vector, distance)
+            ESP.UpdateTracer(espObject, vector)
+        end
+    end,
+    
+    UpdateBox = function(espObject, character, vector)
+        -- Box calculation and update logic
+    end,
+    
+    UpdateText = function(espObject, player, vector, distance)
+        -- Text update logic
+    end,
+    
+    UpdateTracer = function(espObject, vector)
+        -- Tracer update logic
+    end,
+    
+    HideESP = function(espObject)
+        for _, object in pairs(espObject) do
+            object.Visible = false
+        end
+    end,
+    
+    RemoveESP = function(player)
+        local espObject = Cache.ESP[player]
+        if not espObject then return end
+        
+        for _, object in pairs(espObject) do
+            Utility.DestroyDrawing(object)
+        end
+        
+        Cache.ESP[player] = nil
+    end
+}
+
+-- Aimbot System
+local Aimbot = {
+    Target = nil,
+    
+    GetClosestPlayer = function()
+        local closestPlayer = nil
+        local shortestDistance = Config.Aimbot.FovSize
+        
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player == LocalPlayer then continue end
+            if not Utility.IsAlive(player) then continue end
+            if Config.Aimbot.TeamCheck and player.Team == LocalPlayer.Team then continue end
+            
+            local character = player.Character
+            local targetPart = character:FindFirstChild(Config.Aimbot.TargetPart)
+            if not targetPart then continue end
+            
+            local vector, onScreen = Utility.WorldToViewport(targetPart.Position)
+            if not onScreen then continue end
+            
+            local distance = (Vector2.new(vector.X, vector.Y) - UserInputService:GetMouseLocation()).Magnitude
+            if distance < shortestDistance then
+                if Config.Aimbot.VisibilityCheck and not Aimbot.IsVisible(targetPart) then continue end
+                
+                closestPlayer = player
+                shortestDistance = distance
+            end
+        end
+        
+        return closestPlayer
+    end,
+    
+    IsVisible = function(part)
+        local ray = Ray.new(Camera.CFrame.Position, (part.Position - Camera.CFrame.Position).Unit * 1000)
+        local hit = workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character, part.Parent})
+        return not hit
+    end,
+    
+    Update = function()
+        if not Config.Aimbot.Enabled then return end
+        
+        local target = Aimbot.GetClosestPlayer()
+        if not target then
+            Aimbot.Target = nil
+            return
+        end
+        
+        Aimbot.Target = target
+        
+        if Config.Aimbot.AutoShoot then
+            -- Implement auto-shoot logic
+        end
+    end
+}
+
+-- Initialize UI Library
+local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
+
+-- Create UI
+local function CreateUI()
+    -- Criar a UI principal
+    local UI = Lib:Create{
+        Theme = "Dark",
+        Size = UDim2.new(0, 600, 0, 400)
+    }
+
+    -- Criar abas
+    local MainTab = UI:Tab{ Name = "Principal" }
+    local VisualsTab = UI:Tab{ Name = "Visuais" }
+    local AimbotTab = UI:Tab{ Name = "Aimbot" }
+    local MiscTab = UI:Tab{ Name = "Misc" }
+
+    -- Divisores para organização
+    local ESPDivider = VisualsTab:Divider{ Name = "ESP Settings" }
+    local AimbotDivider = AimbotTab:Divider{ Name = "Aimbot Settings" }
+    local MiscDivider = MiscTab:Divider{ Name = "Misc Settings" }
+
+    -- Configurações ESP
+    ESPDivider:Toggle{
+        Name = "ESP Enabled",
+        Description = "Ativa/Desativa o ESP",
+        Callback = function(State)
+            Config.ESP.Enabled = State
+        end
+    }
+
+    ESPDivider:Toggle{
+        Name = "Show Boxes",
+        Description = "Mostra caixas ao redor dos jogadores",
+        Callback = function(State)
+            Config.ESP.ShowBoundingBox = State
+        end
+    }
+
+    ESPDivider:Toggle{
+        Name = "Show Skeleton",
+        Description = "Mostra o esqueleto dos jogadores",
+        Callback = function(State)
+            Config.ESP.ShowSkeleton = State
+        end
+    }
+
+    ESPDivider:ColorPicker{
+        Name = "ESP Color",
+        Default = Color3.fromRGB(255, 0, 0),
+        Callback = function(Color)
+            Config.ESP.BoxColor = Color
+            Config.ESP.TracerColor = Color
+        end
+    }
+
+    ESPDivider:Dropdown{
+        Name = "Tracer Origin",
+        Options = {"Bottom", "Center", "Mouse", "Top"},
+        Callback = function(Value)
+            Config.ESP.TracerOrigin = Value
+        end
+    }
+
+    -- Configurações Aimbot
+    AimbotDivider:Toggle{
+        Name = "Aimbot Enabled",
+        Description = "Ativa/Desativa o Aimbot",
+        Callback = function(State)
+            Config.Aimbot.Enabled = State
+        end
+    }
+
+    AimbotDivider:Toggle{
+        Name = "Show FOV",
+        Description = "Mostra o círculo de FOV",
+        Callback = function(State)
+            Config.Aimbot.ShowFOV = State
+        end
+    }
+
+    AimbotDivider:Box{
+        Name = "FOV Size",
+        ClearText = true,
+        Callback = function(Value)
+            Config.Aimbot.FovSize = tonumber(Value) or 150
+        end
+    }
+
+    AimbotDivider:Dropdown{
+        Name = "Target Part",
+        Options = {"Head", "Torso", "Closest"},
+        Callback = function(Value)
+            Config.Aimbot.TargetPart = Value
+        end
+    }
+
+    AimbotDivider:Box{
+        Name = "Smoothness",
+        ClearText = true,
+        Callback = function(Value)
+            Config.Aimbot.Smoothness = tonumber(Value) or 0.5
+        end
+    }
+
+    -- Configurações Misc
+    MiscDivider:Toggle{
+        Name = "Bunny Hop",
+        Description = "Auto-pulo ao segurar espaço",
+        Callback = function(State)
+            Config.Misc.BunnyHop = State
+        end
+    }
+
+    MiscDivider:Toggle{
+        Name = "Auto Shoot",
+        Description = "Atira automaticamente ao mirar",
+        Callback = function(State)
+            Config.Aimbot.AutoShoot = State
+        end
+    }
+
+    MiscDivider:Box{
+        Name = "Speed Multiplier",
+        ClearText = true,
+        Callback = function(Value)
+            Config.Misc.SpeedMultiplier = tonumber(Value) or 1
+        end
+    }
+
+    -- Botão para fechar
+    local QuitDivider = MainTab:Divider{ Name = "Quit" }
+    QuitDivider:Button{
+        Name = "Close GUI",
+        Description = "Fecha a interface",
+        Callback = function()
+            UI:Quit{
+                Message = "Fechando...",
+                Length = 1
+            }
+        end
+    }
+
+    -- Configurações de teclas
+    local KeybindsDivider = MainTab:Divider{ Name = "Keybinds" }
+    KeybindsDivider:SearchDropdown{
+        Name = "Aimbot Key",
+        Options = {"E", "Q", "F", "X", "C", "V", "T", "G", "B"},
+        ClearText = false,
+        Callback = function(Value)
+            Config.Aimbot.TriggerKey = Enum.KeyCode[Value]
+        end
+    }
+
+    -- Salvar configurações
+    local SaveDivider = MainTab:Divider{ Name = "Settings" }
+    SaveDivider:Button{
+        Name = "Save Config",
+        Description = "Salva as configurações atuais",
+        Callback = function()
+            -- Implementar sistema de salvamento
+            print("Configurações salvas!")
+        end
+    }
+
+    SaveDivider:Button{
+        Name = "Load Config",
+        Description = "Carrega as configurações salvas",
+        Callback = function()
+            -- Implementar sistema de carregamento
+            print("Configurações carregadas!")
+        end
+    }
+end
+
+-- Initialize
+local function Init()
+    CreateUI()
+    
+    -- Connect update functions
+    RunService:BindToRenderStep("ESP", 1, ESP.UpdateESP)
+    RunService:BindToRenderStep("Aimbot", 2, Aimbot.Update)
+    
+    -- Player handling
+    Players.PlayerAdded:Connect(function(player)
+        ESP.CreateESPObject(player)
+    end)
+    
+    Players.PlayerRemoving:Connect(function(player)
+        ESP.RemoveESP(player)
+    end)
+    
+    -- Initialize existing players
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            ESP.CreateESPObject(player)
+        end
+    end
+end
+
+-- Start the script
+Init() 
+
+-- UI Library
+local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
+
+-- UI Theme
+local Theme = {
+    Primary = Color3.fromRGB(30, 30, 35),
+    Secondary = Color3.fromRGB(45, 45, 50),
+    Accent = Color3.fromRGB(255, 0, 85),
+    Text = Color3.fromRGB(255, 255, 255),
+    Success = Color3.fromRGB(0, 255, 140),
+    Warning = Color3.fromRGB(255, 165, 0),
+    Error = Color3.fromRGB(255, 0, 0)
+}
+
+-- Create Main Window
+local Window = Lib:Create{
+    Name = "Premium ESP & Aimbot",
+    Theme = "Dark",
+    Size = UDim2.new(0, 650, 0, 450),
+    Acrylic = true -- Efeito de vidro fosco
+}
+
+-- Create Tabs
+local Tabs = {
+    Combat = Window:Tab{ 
+        Name = "Combat",
+        Icon = "⚔️" 
+    },
+    Visuals = Window:Tab{ 
+        Name = "Visuals",
+        Icon = "👁️" 
+    },
+    Settings = Window:Tab{ 
+        Name = "Settings",
+        Icon = "⚙️" 
+    },
+    Info = Window:Tab{ 
+        Name = "Info",
+        Icon = "ℹ️" 
+    }
+}
+
+-- Combat Tab
+local AimbotSection = Tabs.Combat:Section{
+    Name = "Aimbot Settings",
+    Side = "Left"
+}
+
+AimbotSection:Toggle{
+    Name = "Enable Aimbot",
+    Description = "Toggle aimbot functionality",
+    Default = false,
+    Callback = function(Value)
+        Config.Aimbot.Enabled = Value
+        -- Adicionar efeito visual de ativação
+        Window:Notify{
+            Title = "Aimbot",
+            Description = Value and "Enabled" or "Disabled",
+            Duration = 2,
+            Type = Value and "Success" or "Error"
+        }
+    end
+}
+
+AimbotSection:Slider{
+    Name = "Smoothness",
+    Description = "Adjust aimbot smoothness",
+    Default = 0.5,
+    Min = 0,
+    Max = 1,
+    Increment = 0.1,
+    ValueFormat = "%.1f",
+    Callback = function(Value)
+        Config.Aimbot.Settings.Smoothness = Value
+    end
+}
+
+AimbotSection:Dropdown{
+    Name = "Target Part",
+    Description = "Select target body part",
+    Default = "Head",
+    Options = {"Head", "Torso", "Random"},
+    Callback = function(Value)
+        Config.Aimbot.Target.Part = Value
+    end
+}
+
+local AimbotAdvanced = Tabs.Combat:Section{
+    Name = "Advanced Settings",
+    Side = "Right"
+}
+
+AimbotAdvanced:Toggle{
+    Name = "Prediction",
+    Description = "Enable movement prediction",
+    Default = true,
+    Callback = function(Value)
+        Config.Aimbot.Settings.Prediction.Enabled = Value
+    end
+}
+
+AimbotAdvanced:ColorPicker{
+    Name = "FOV Color",
+    Description = "Adjust FOV circle color",
+    Default = Theme.Accent,
+    Callback = function(Color)
+        Config.Aimbot.FOV.Color = Color
+    end
+}
+
+-- Visuals Tab
+local ESPSection = Tabs.Visuals:Section{
+    Name = "ESP Settings",
+    Side = "Left"
+}
+
+ESPSection:Toggle{
+    Name = "Enable ESP",
+    Description = "Toggle ESP features",
+    Default = false,
+    Callback = function(Value)
+        Config.ESP.Enabled = Value
+        Window:Notify{
+            Title = "ESP",
+            Description = Value and "Enabled" or "Disabled",
+            Duration = 2,
+            Type = Value and "Success" or "Error"
+        }
+    end
+}
+
+ESPSection:MultiDropdown{
+    Name = "ESP Features",
+    Description = "Select ESP elements to display",
+    Default = {"Box", "Name", "Distance"},
+    Options = {"Box", "Name", "Distance", "Health", "Weapon", "Skeleton", "Tracers"},
+    Callback = function(Values)
+        for feature, enabled in pairs(Values) do
+            Config.ESP.Features["Show"..feature] = enabled
+        end
+    end
+}
+
+local VisualStyles = Tabs.Visuals:Section{
+    Name = "Visual Style",
+    Side = "Right"
+}
+
+VisualStyles:ColorPicker{
+    Name = "Enemy Color",
+    Description = "ESP color for enemies",
+    Default = Theme.Error,
+    Callback = function(Color)
+        VisualSettings.ESP.BoxColors.Enemy = Color
+    end
+}
+
+VisualStyles:ColorPicker{
+    Name = "Team Color",
+    Description = "ESP color for teammates",
+    Default = Theme.Success,
+    Callback = function(Color)
+        VisualSettings.ESP.BoxColors.Team = Color
+    end
+}
+
+-- Settings Tab
+local ConfigSection = Tabs.Settings:Section{
+    Name = "Configuration",
+    Side = "Left"
+}
+
+ConfigSection:Button{
+    Name = "Save Config",
+    Description = "Save current settings",
+    Callback = function()
+        -- Implementar salvamento
+        Window:Notify{
+            Title = "Success",
+            Description = "Configuration saved!",
+            Duration = 2,
+            Type = "Success"
+        }
+    end
+}
+
+ConfigSection:Button{
+    Name = "Load Config",
+    Description = "Load saved settings",
+    Callback = function()
+        -- Implementar carregamento
+        Window:Notify{
+            Title = "Success",
+            Description = "Configuration loaded!",
+            Duration = 2,
+            Type = "Success"
+        }
+    end
+}
+
+local PerformanceSection = Tabs.Settings:Section{
+    Name = "Performance",
+    Side = "Right"
+}
+
+PerformanceSection:Slider{
+    Name = "Update Rate",
+    Description = "ESP update frequency",
+    Default = 0.1,
+    Min = 0.01,
+    Max = 1,
+    Increment = 0.01,
+    ValueFormat = "%.2fs",
+    Callback = function(Value)
+        Config.ESP.Performance.UpdateRate = Value
+    end
+}
+
+-- Info Tab
+local InfoSection = Tabs.Info:Section{
+    Name = "Information",
+    Side = "Left"
+}
+
+InfoSection:Label{
+    Text = "Premium ESP & Aimbot v1.0.0",
+    Color = Theme.Accent
+}
+
+InfoSection:Label{
+    Text = "Created by: [Your Name]",
+    Color = Theme.Text
+}
+
+InfoSection:Button{
+    Name = "Copy Discord",
+    Description = "Copy Discord invite link",
+    Callback = function()
+        setclipboard("your_discord_link")
+        Window:Notify{
+            Title = "Success",
+            Description = "Discord link copied!",
+            Duration = 2,
+            Type = "Success"
+        }
+    end
+}
+
+-- Keybinds Section
+local KeybindSection = Tabs.Settings:Section{
+    Name = "Keybinds",
+    Side = "Left"
+}
+
+KeybindSection:Keybind{
+    Name = "Toggle UI",
+    Description = "Show/Hide interface",
+    Default = Enum.KeyCode.RightShift,
+    Callback = function()
+        Window:Toggle()
+    end
+}
+
+KeybindSection:Keybind{
+    Name = "Aimbot Key",
+    Description = "Key to activate aimbot",
+    Default = Enum.KeyCode.E,
+    Callback = function(Key)
+        Config.Aimbot.Target.Lock = Key
+    end
+}
+
+-- Initialize UI
+Window:Initialize() 
