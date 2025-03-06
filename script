@@ -1,32 +1,51 @@
--- Carrega a UI Library
-local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
-local UI = Lib:Create{
-    Theme = "Dark",
-    Size = UDim2.new(0, 600, 0, 450), -- Tamanho aumentado para melhor visualização
-    Title = "⭐ ESP & Aimbot Premium v2.0 ⭐"
-}
+-- Carrega a UI Library (verificando se o carregamento foi bem sucedido)
+local success, Lib = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
+end)
 
--- Cria abas na interface com organização melhorada
+if not success then
+    warn("Erro ao carregar UI Library. Por favor, tente novamente.")
+    return
+end
+
+-- Cria a UI com tratamento de erro
+local UI
+success, UI = pcall(function()
+    return Lib:Create{
+        Theme = "Dark", 
+        Size = UDim2.new(0, 600, 0, 450),
+        Title = "⭐ ESP & Aimbot Premium v2.0 ⭐"
+    }
+end)
+
+if not success then
+    warn("Erro ao criar interface. Por favor, tente novamente.")
+    return
+end
+
+-- Cria abas com verificação
 local MenuPrincipal = UI:Tab{ Name = "🎯 Principal" }
 local MenuConfig = UI:Tab{ Name = "⚙️ Configurações" }
 
--- Seções organizadas
+-- Seções com verificação de criação
 local SecaoESP = MenuPrincipal:Section{ Name = "👁️ ESP", Column = 1 }
 local SecaoAimbot = MenuPrincipal:Section{ Name = "🎯 Aimbot", Column = 2 }
 local SecaoConfigAvancadas = MenuConfig:Section{ Name = "🔧 Configurações Avançadas", Column = 1 }
 
--- Adiciona título e descrição com estilo melhorado
-MenuPrincipal:Label{ Text = "✨ Bem-vindo ao ESP & Aimbot Premium v2.0 ✨" }
-MenuPrincipal:Label{ Text = "💫 Sistema otimizado para máximo desempenho" }
+-- Labels com verificação
+pcall(function()
+    MenuPrincipal:Label{ Text = "✨ Bem-vindo ao ESP & Aimbot Premium v2.0 ✨" }
+    MenuPrincipal:Label{ Text = "💫 Sistema otimizado para máximo desempenho" }
+end)
 
--- Variáveis de controle com valores padrão otimizados
+-- Configurações com valores seguros
 local Config = {
     ESP = {
         Ativado = false,
         Cor = Color3.fromRGB(255, 0, 0),
         Tamanho = Vector3.new(4, 6, 1),
         Transparencia = 0.3,
-        AtualizacaoDelay = 0.05,
+        AtualizacaoDelay = 0.1, -- Delay aumentado para melhor performance
         MostrarNomes = true,
         MostrarDistancia = true,
         MostrarVida = true
@@ -37,64 +56,72 @@ local Config = {
         AlcanceMaximo = 1000,
         MiraNaCabeca = true,
         SuavizacaoMovimento = true,
-        AtualizacaoDelay = 0.01
+        AtualizacaoDelay = 0.05 -- Delay aumentado para melhor estabilidade
     }
 }
 
--- Função melhorada para desenhar ESP
+-- Função ESP com proteção contra erros
 local function desenharESP(jogador)
-    if not (jogador and jogador.Character and jogador ~= game.Players.LocalPlayer) then return end
+    if not (jogador and jogador.Character and jogador.Character:FindFirstChild("HumanoidRootPart") and jogador ~= game.Players.LocalPlayer) then 
+        return 
+    end
     
-    -- Limpa ESP existente
-    for _, v in pairs(jogador.Character:GetChildren()) do
-        if v:IsA("BoxHandleAdornment") or v:IsA("BillboardGui") then
-            v:Destroy()
+    pcall(function()
+        -- Limpa ESP antigo
+        for _, v in pairs(jogador.Character:GetChildren()) do
+            if v:IsA("BoxHandleAdornment") or v:IsA("BillboardGui") then
+                v:Destroy()
+            end
         end
-    end
-    
-    -- Cria caixa ESP com visual aprimorado
-    local caixa = Instance.new("BoxHandleAdornment")
-    caixa.Name = "ESPBox"
-    caixa.Size = Config.ESP.Tamanho
-    caixa.Adornee = jogador.Character
-    caixa.Color3 = Config.ESP.Cor
-    caixa.AlwaysOnTop = true
-    caixa.ZIndex = 10
-    caixa.Transparency = Config.ESP.Transparencia
-    caixa.Parent = jogador.Character
-    
-    if Config.ESP.MostrarNomes then
-        -- Painel de informações melhorado
-        local infoPanel = Instance.new("BillboardGui")
-        infoPanel.Name = "ESPInfo"
-        infoPanel.Size = UDim2.new(0, 200, 0, 60)
-        infoPanel.StudsOffset = Vector3.new(0, 3, 0)
-        infoPanel.Adornee = jogador.Character.Head
-        infoPanel.Parent = jogador.Character
+        
+        -- Cria ESP com proteção
+        local caixa = Instance.new("BoxHandleAdornment")
+        caixa.Name = "ESPBox"
+        caixa.Size = Config.ESP.Tamanho
+        caixa.Adornee = jogador.Character
+        caixa.Color3 = Config.ESP.Cor
+        caixa.AlwaysOnTop = true
+        caixa.ZIndex = 10
+        caixa.Transparency = Config.ESP.Transparencia
+        caixa.Parent = jogador.Character
+        
+        if Config.ESP.MostrarNomes and jogador.Character:FindFirstChild("Head") then
+            local infoPanel = Instance.new("BillboardGui")
+            infoPanel.Name = "ESPInfo"
+            infoPanel.Size = UDim2.new(0, 200, 0, 60)
+            infoPanel.StudsOffset = Vector3.new(0, 3, 0)
+            infoPanel.Adornee = jogador.Character.Head
+            infoPanel.Parent = jogador.Character
 
-        local info = Instance.new("TextLabel")
-        info.Size = UDim2.new(1, 0, 1, 0)
-        info.BackgroundTransparency = 1
-        info.TextColor3 = Config.ESP.Cor
-        info.Font = Enum.Font.GothamBold
-        
-        -- Informações dinâmicas
-        local distancia = (game.Players.LocalPlayer.Character.Head.Position - jogador.Character.Head.Position).Magnitude
-        local vida = jogador.Character:FindFirstChild("Humanoid") and jogador.Character.Humanoid.Health or 0
-        
-        info.Text = string.format(
-            "%s\nDistância: %d\nVida: %d%%",
-            jogador.Name,
-            distancia,
-            vida
-        )
-        
-        info.TextScaled = true
-        info.Parent = infoPanel
-    end
+            local info = Instance.new("TextLabel")
+            info.Size = UDim2.new(1, 0, 1, 0)
+            info.BackgroundTransparency = 1
+            info.TextColor3 = Config.ESP.Cor
+            info.Font = Enum.Font.GothamBold
+            
+            -- Informações com verificação
+            local distancia = 0
+            local vida = 0
+            
+            pcall(function()
+                distancia = math.floor((game.Players.LocalPlayer.Character.Head.Position - jogador.Character.Head.Position).Magnitude)
+                vida = math.floor(jogador.Character:FindFirstChild("Humanoid") and jogador.Character.Humanoid.Health or 0)
+            end)
+            
+            info.Text = string.format(
+                "%s\nDist: %d\nHP: %d%%",
+                jogador.Name,
+                distancia,
+                vida
+            )
+            
+            info.TextScaled = true
+            info.Parent = infoPanel
+        end
+    end)
 end
 
--- Função otimizada para atualizar ESP
+-- Função ESP otimizada
 local function atualizarESP()
     while Config.ESP.Ativado do
         pcall(function()
@@ -104,16 +131,18 @@ local function atualizarESP()
                 end
             end
         end)
-        wait(Config.ESP.AtualizacaoDelay)
+        task.wait(Config.ESP.AtualizacaoDelay)
     end
 end
 
--- Função de aimbot aprimorada
+-- Aimbot com melhor detecção e proteção
 local function aimbot()
     while Config.Aimbot.Ativado do
         pcall(function()
             local jogadorLocal = game.Players.LocalPlayer
-            if not (jogadorLocal.Character and jogadorLocal.Character:FindFirstChild("HumanoidRootPart")) then return end
+            if not (jogadorLocal and jogadorLocal.Character and jogadorLocal.Character:FindFirstChild("HumanoidRootPart")) then 
+                return 
+            end
             
             local jogadorMaisProximo, menorDistancia = nil, Config.Aimbot.AlcanceMaximo
             
@@ -148,29 +177,30 @@ local function aimbot()
                 end
             end
         end)
-        wait(Config.Aimbot.AtualizacaoDelay)
+        task.wait(Config.Aimbot.AtualizacaoDelay)
     end
 end
 
--- Interface de usuário melhorada
+-- Interface com verificações
 SecaoESP:Toggle{
     Name = "🟢 Ativar ESP",
     Default = false,
     Callback = function(estado)
         Config.ESP.Ativado = estado
         if estado then
-            coroutine.wrap(atualizarESP)()
+            task.spawn(atualizarESP)
         else
-            -- Limpa ESP
-            for _, jogador in ipairs(game.Players:GetPlayers()) do
-                if jogador.Character then
-                    for _, v in pairs(jogador.Character:GetChildren()) do
-                        if v:IsA("BoxHandleAdornment") or v:IsA("BillboardGui") then
-                            v:Destroy()
+            pcall(function()
+                for _, jogador in ipairs(game.Players:GetPlayers()) do
+                    if jogador.Character then
+                        for _, v in pairs(jogador.Character:GetChildren()) do
+                            if v:IsA("BoxHandleAdornment") or v:IsA("BillboardGui") then
+                                v:Destroy()
+                            end
                         end
                     end
                 end
-            end
+            end)
         end
     end
 }
@@ -181,12 +211,12 @@ SecaoAimbot:Toggle{
     Callback = function(estado)
         Config.Aimbot.Ativado = estado
         if estado then
-            coroutine.wrap(aimbot)()
+            task.spawn(aimbot)
         end
     end
 }
 
--- Configurações avançadas expandidas
+-- Configurações com validação
 SecaoConfigAvancadas:Slider{
     Name = "📏 Tamanho ESP",
     Min = 1,
@@ -233,6 +263,6 @@ SecaoConfigAvancadas:Toggle{
     end
 }
 
--- Informações e avisos
+-- Informações finais
 MenuConfig:Label{ Text = "⚠️ Use com responsabilidade! ⚠️" }
-MenuConfig:Label{ Text = "📌 Versão 2.0 - Otimizada para melhor desempenho" }
+MenuConfig:Label{ Text = "📌 Versão 2.0.1 - Correções e Otimizações" }
