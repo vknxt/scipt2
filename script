@@ -25,8 +25,8 @@ local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- Carregar a biblioteca de UI (Orion Library)
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+-- Carregar a nova biblioteca de UI
+local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
 
 -- Configurações do script
 local Config = {
@@ -50,35 +50,30 @@ local Config = {
 }
 
 -- Criar a janela principal da UI
-local Window = OrionLib:MakeWindow({
-    Name = "CPX Script", 
-    HidePremium = true,
-    SaveConfig = true, 
-    ConfigFolder = "CPXScript"
-})
+local UI = Lib:Create{
+    Theme = "Dark", -- ou qualquer outro tema
+    Size = UDim2.new(0, 555, 0, 400) -- tamanho padrão
+}
 
 -- Criar abas na UI
-local CombatTab = Window:MakeTab({
-    Name = "Combat",
-    PremiumOnly = false
-})
+local CombatTab = UI:Tab{
+    Name = "Combat"
+}
 
-local VisualsTab = Window:MakeTab({
-    Name = "Visuals",
-    PremiumOnly = false
-})
+local VisualsTab = UI:Tab{
+    Name = "Visuals"
+}
 
-local SettingsTab = Window:MakeTab({
-    Name = "Settings",
-    PremiumOnly = false
-})
+local SettingsTab = UI:Tab{
+    Name = "Settings"
+}
 
 -- Seção de Aimbot
-local AimbotSection = CombatTab:AddSection({
+local AimbotSection = CombatTab:Divider{
     Name = "Aimbot"
-})
+}
 
-AimbotSection:AddToggle({
+AimbotSection:Toggle{
     Name = "Enable Aimbot",
     Default = false,
     Save = true,
@@ -86,9 +81,9 @@ AimbotSection:AddToggle({
     Callback = function(Value)
         Config.Aimbot.Enabled = Value
     end    
-})
+}
 
-AimbotSection:AddToggle({
+AimbotSection:Toggle{
     Name = "Team Check",
     Default = true,
     Save = true,
@@ -96,9 +91,9 @@ AimbotSection:AddToggle({
     Callback = function(Value)
         Config.Aimbot.TeamCheck = Value
     end    
-})
+}
 
-AimbotSection:AddSlider({
+AimbotSection:Slider{
     Name = "Smoothness",
     Min = 1,
     Max = 100,
@@ -110,9 +105,9 @@ AimbotSection:AddSlider({
     Callback = function(Value)
         Config.Aimbot.Smoothness = Value / 100
     end    
-})
+}
 
-AimbotSection:AddDropdown({
+AimbotSection:Dropdown{
     Name = "Aim Part",
     Default = "Head",
     Options = {"Head", "UpperTorso", "HumanoidRootPart"},
@@ -121,14 +116,14 @@ AimbotSection:AddDropdown({
     Callback = function(Value)
         Config.Aimbot.AimPart = Value
     end    
-})
+}
 
 -- Seção de ESP
-local ESPSection = VisualsTab:AddSection({
+local ESPSection = VisualsTab:Divider{
     Name = "ESP"
-})
+}
 
-ESPSection:AddToggle({
+ESPSection:Toggle{
     Name = "Enable ESP",
     Default = false,
     Save = true,
@@ -136,9 +131,9 @@ ESPSection:AddToggle({
     Callback = function(Value)
         Config.ESP.Enabled = Value
     end    
-})
+}
 
-ESPSection:AddToggle({
+ESPSection:Toggle{
     Name = "Box ESP",
     Default = true,
     Save = true,
@@ -146,9 +141,9 @@ ESPSection:AddToggle({
     Callback = function(Value)
         Config.ESP.BoxEnabled = Value
     end    
-})
+}
 
-ESPSection:AddToggle({
+ESPSection:Toggle{
     Name = "Name ESP",
     Default = true,
     Save = true,
@@ -156,9 +151,9 @@ ESPSection:AddToggle({
     Callback = function(Value)
         Config.ESP.NameEnabled = Value
     end    
-})
+}
 
-ESPSection:AddToggle({
+ESPSection:Toggle{
     Name = "Health ESP",
     Default = true,
     Save = true,
@@ -166,9 +161,9 @@ ESPSection:AddToggle({
     Callback = function(Value)
         Config.ESP.HealthEnabled = Value
     end    
-})
+}
 
-ESPSection:AddColorpicker({
+ESPSection:Colorpicker{
     Name = "ESP Color",
     Default = Color3.fromRGB(255, 0, 0),
     Save = true,
@@ -176,23 +171,23 @@ ESPSection:AddColorpicker({
     Callback = function(Value)
         Config.ESP.BoxColor = Value
     end  
-})
+}
 
 -- Seção de Configurações
-local SettingsSection = SettingsTab:AddSection({
+local SettingsSection = SettingsTab:Divider{
     Name = "Settings"
-})
+}
 
-SettingsSection:AddKeybind({
+SettingsSection:Keybind{
     Name = "Toggle UI",
     Default = Enum.KeyCode.RightShift,
     Hold = false,
     Save = true,
     Flag = "toggleUI",
     Callback = function()
-        OrionLib:ToggleUI()
+        Lib:ToggleUI()
     end    
-})
+}
 
 -- Funções Utilitárias
 local function GetDistance(position)
@@ -254,10 +249,10 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- Inicialização da UI
-OrionLib:Init()
+Lib:Init()
 
 -- Notificação inicial
-OrionLib:MakeNotification({
+Lib:MakeNotification({
     Name = "Script Loaded",
     Content = "CPX Script v3.0.0 loaded successfully!",
     Image = "rbxassetid://4483345998",
@@ -265,20 +260,20 @@ OrionLib:MakeNotification({
 })
 
 -- Criar uma aba de teste
-local TestTab = Window:MakeTab({
-    Name = "Test",
-    PremiumOnly = false
-})
+local TestTab = UI:Tab{
+    Name = "Test"
+}
 
 -- Adicionar uma seção de teste
-local TestSection = TestTab:AddSection({
+local TestSection = TestTab:Divider{
     Name = "Test Section"
-})
+}
 
 -- Adicionar um botão de teste
-TestSection:AddButton({
+TestSection:Button{
     Name = "Test Button",
+    Description = "Pressione para testar",
     Callback = function()
         print("Button Pressed")
     end
-}) 
+} 
