@@ -523,57 +523,69 @@ local Aimbot = {
     end
 }
 
--- Criar a janela principal com configurações corretas
-local Window = Lib:Create({
-    Title = "Premium Script",
-    SubTitle = "v2.1.0",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark"
+-- Criar a janela principal
+local Window = Lib:Window({
+    Name = "Premium Script",
+    StartupSound = true,
+    IntroEnabled = false,
+    IntroText = "Premium Script",
+    IntroIcon = "rbxassetid://6034509993",
+    Icon = "rbxassetid://6034509993",
+    IntroBlur = true,
+    IntroBlurIntensity = 15,
+    Theme = "Dark",
+    Position = UDim2.new(0.5, -300, 0.5, -150)
 })
 
--- Criar as abas corretamente
-local CombatTab = Window:AddTab({
-    Title = "Combat",
-    Icon = "rbxassetid://7733799682"
+-- Criar as abas
+local Combat = Window:Tab({
+    Name = "Combat",
+    Icon = "rbxassetid://7733799682",
+    Color = Color3.fromRGB(255, 0, 85)
 })
 
-local VisualsTab = Window:AddTab({
-    Title = "Visuals",
-    Icon = "rbxassetid://7733774602"
+local Visuals = Window:Tab({
+    Name = "Visuals",
+    Icon = "rbxassetid://7733774602",
+    Color = Color3.fromRGB(255, 0, 85)
 })
 
-local SettingsTab = Window:AddTab({
-    Title = "Settings",
-    Icon = "rbxassetid://7734053495"
+local Settings = Window:Tab({
+    Name = "Settings",
+    Icon = "rbxassetid://7734053495",
+    Color = Color3.fromRGB(255, 0, 85)
 })
 
--- Aba Combat
-local AimbotSection = CombatTab:AddSection("Aimbot Settings")
+-- Seção Aimbot
+local AimbotSection = Combat:Section({
+    Name = "Aimbot",
+    Side = "Left"
+})
 
-AimbotSection:AddToggle({
-    Title = "Enable Aimbot",
+AimbotSection:Toggle({
+    Name = "Enable Aimbot",
+    Flag = "AimbotEnabled",
     Default = false,
     Callback = function(Value)
         Config.Aimbot.Enabled = Value
     end
 })
 
-AimbotSection:AddSlider({
-    Title = "Smoothness",
+AimbotSection:Slider({
+    Name = "Smoothness",
+    Flag = "AimbotSmoothness",
     Default = 0.5,
     Min = 0,
     Max = 1,
     Increment = 0.1,
-    ValueName = "x",
     Callback = function(Value)
         Config.Aimbot.Settings.Smoothness = Value
     end
 })
 
-AimbotSection:AddDropdown({
-    Title = "Target Part",
+AimbotSection:Dropdown({
+    Name = "Target Part",
+    Flag = "AimbotTargetPart",
     Default = "Head",
     Items = {"Head", "HumanoidRootPart", "Torso", "Random"},
     Multi = false,
@@ -582,60 +594,74 @@ AimbotSection:AddDropdown({
     end
 })
 
--- Aba Visuals
-local ESPSection = VisualsTab:AddSection("ESP Settings")
+-- Seção ESP
+local ESPSection = Visuals:Section({
+    Name = "ESP",
+    Side = "Left"
+})
 
-ESPSection:AddToggle({
-    Title = "Enable ESP",
+ESPSection:Toggle({
+    Name = "Enable ESP",
+    Flag = "ESPEnabled",
     Default = false,
     Callback = function(Value)
         Config.ESP.Enabled = Value
     end
 })
 
-ESPSection:AddToggle({
-    Title = "Box ESP",
+ESPSection:Toggle({
+    Name = "Box ESP",
+    Flag = "BoxESP",
     Default = true,
     Callback = function(Value)
         Config.ESP.BoxStyle.Enabled = Value
     end
 })
 
-ESPSection:AddToggle({
-    Title = "Show Names",
+ESPSection:Toggle({
+    Name = "Show Names",
+    Flag = "ShowNames",
     Default = true,
     Callback = function(Value)
         Config.ESP.TextStyle.ShowName = Value
     end
 })
 
-ESPSection:AddColorPicker({
-    Title = "ESP Color",
+ESPSection:ColorPicker({
+    Name = "ESP Color",
+    Flag = "ESPChoice",
     Default = Color3.fromRGB(255, 0, 85),
     Callback = function(Value)
         Config.ESP.BoxStyle.Color = Value
     end
 })
 
--- Aba Settings
-local PerformanceSection = SettingsTab:AddSection("Performance")
+-- Seção Performance
+local PerformanceSection = Settings:Section({
+    Name = "Performance",
+    Side = "Left"
+})
 
-PerformanceSection:AddSlider({
-    Title = "Update Rate",
+PerformanceSection:Slider({
+    Name = "Update Rate",
+    Flag = "UpdateRate",
     Default = 60,
     Min = 15,
     Max = 144,
     Increment = 1,
-    ValueName = "fps",
     Callback = function(Value)
         Performance.UpdateRate = 1 / Value
     end
 })
 
-local ConfigSection = SettingsTab:AddSection("Configuration")
+local ConfigSection = Settings:Section({
+    Name = "Configuration",
+    Side = "Left"
+})
 
-ConfigSection:AddButton({
-    Title = "Save Config",
+ConfigSection:Button({
+    Name = "Save Config",
+    Flag = "SaveConfig",
     Callback = function()
         -- Implementar salvamento
         Lib:Notify({
@@ -646,8 +672,9 @@ ConfigSection:AddButton({
     end
 })
 
-ConfigSection:AddButton({
-    Title = "Load Config",
+ConfigSection:Button({
+    Name = "Load Config",
+    Flag = "LoadConfig",
     Callback = function()
         -- Implementar carregamento
         Lib:Notify({
@@ -658,22 +685,29 @@ ConfigSection:AddButton({
     end
 })
 
--- Keybinds
-local KeybindSection = SettingsTab:AddSection("Keybinds")
+-- Seção Keybinds
+local KeybindSection = Settings:Section({
+    Name = "Keybinds",
+    Side = "Left"
+})
 
-KeybindSection:AddKeybind({
-    Title = "Toggle UI",
+KeybindSection:Keybind({
+    Name = "Toggle UI",
+    Flag = "ToggleUI",
     Default = Enum.KeyCode.RightShift,
     Callback = function()
         -- Toggle UI visibility
     end
 })
 
--- Adicionar informações
-local InfoSection = SettingsTab:AddSection("Information")
+-- Seção Informações
+local InfoSection = Settings:Section({
+    Name = "Information",
+    Side = "Left"
+})
 
-InfoSection:AddParagraph({
-    Title = "Script Info",
+InfoSection:Paragraph({
+    Name = "Script Info",
     Content = "Version: 2.1.0\nLast Updated: 2024"
 })
 
