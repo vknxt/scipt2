@@ -1,124 +1,124 @@
 -- Carrega a UI Library
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/7yhx/kwargs_Ui_Library/main/source.lua"))()
 local UI = Lib:Create{
-    Theme = "Dark",
-    Size = UDim2.new(0, 700, 0, 500),
-    Title = "⭐ Premium ESP & Aimbot ⭐"
+    Theme = "Dark", 
+    Size = UDim2.new(0, 555, 0, 400),
+    Title = "⭐ ESP & Aimbot Premium ⭐"
 }
 
 -- Cria abas na interface
-local MainTab = UI:Tab{ Name = "🎯 Main" }
-local ESPSection = MainTab:Section{ Name = "👁️ ESP Settings", Column = 1 }
-local AimbotSection = MainTab:Section{ Name = "🎯 Aimbot Settings", Column = 2 }
+local MenuPrincipal = UI:Tab{ Name = "🎯 Principal" }
+local SecaoESP = MenuPrincipal:Section{ Name = "👁️ Configurações ESP", Column = 1 }
+local SecaoAimbot = MenuPrincipal:Section{ Name = "🎯 Configurações Aimbot", Column = 2 }
 
--- Adiciona um título e descrição com estilo
-MainTab:Label{ Text = "✨ Welcome to Premium ESP & Aimbot Tool ✨" }
-MainTab:Label{ Text = "💫 Customize your settings for the best experience:" }
+-- Adiciona título e descrição
+MenuPrincipal:Label{ Text = "✨ Bem-vindo ao ESP & Aimbot Premium ✨" }
+MenuPrincipal:Label{ Text = "💫 Personalize as configurações para a melhor experiência:" }
 
 -- Variáveis de controle
-_G.espEnabled = false
-_G.aimbotEnabled = false
-local espColor = Color3.fromRGB(0, 255, 0)
-local espSize = Vector3.new(4, 6, 1)
-local aimbotSensitivity = 0.5
+_G.espAtivado = false
+_G.aimbotAtivado = false
+local corESP = Color3.fromRGB(255, 0, 0) -- Vermelho por padrão
+local tamanhoESP = Vector3.new(4, 6, 1)
+local sensibilidadeAimbot = 0.5
 
--- Função melhorada para desenhar ESP
-local function drawESP(player)
-    if player and player ~= game.Players.LocalPlayer and player.Character then
+-- Função para desenhar ESP
+local function desenharESP(jogador)
+    if jogador and jogador ~= game.Players.LocalPlayer and jogador.Character then
         -- Remove ESP existente
-        for _, v in pairs(player.Character:GetChildren()) do
+        for _, v in pairs(jogador.Character:GetChildren()) do
             if v:IsA("BoxHandleAdornment") or v:IsA("BillboardGui") then
                 v:Destroy()
             end
         end
         
         -- Cria nova caixa ESP
-        local box = Instance.new("BoxHandleAdornment")
-        box.Size = espSize
-        box.Adornee = player.Character
-        box.Color3 = espColor
-        box.AlwaysOnTop = true
-        box.ZIndex = 10
-        box.Transparency = 0.3
-        box.Parent = player.Character
+        local caixa = Instance.new("BoxHandleAdornment")
+        caixa.Size = tamanhoESP
+        caixa.Adornee = jogador.Character
+        caixa.Color3 = corESP
+        caixa.AlwaysOnTop = true
+        caixa.ZIndex = 10
+        caixa.Transparency = 0.3
+        caixa.Parent = jogador.Character
         
         -- Adiciona nome do jogador
-        local billboardGui = Instance.new("BillboardGui")
-        billboardGui.Size = UDim2.new(0, 100, 0, 40)
-        billboardGui.StudsOffset = Vector3.new(0, 3, 0)
-        billboardGui.Adornee = player.Character.Head
-        billboardGui.Parent = player.Character
+        local painelNome = Instance.new("BillboardGui")
+        painelNome.Size = UDim2.new(0, 100, 0, 40)
+        painelNome.StudsOffset = Vector3.new(0, 3, 0)
+        painelNome.Adornee = jogador.Character.Head
+        painelNome.Parent = jogador.Character
 
-        local nameLabel = Instance.new("TextLabel")
-        nameLabel.Size = UDim2.new(1, 0, 1, 0)
-        nameLabel.BackgroundTransparency = 1
-        nameLabel.TextColor3 = espColor
-        nameLabel.Text = player.Name
-        nameLabel.TextScaled = true
-        nameLabel.Parent = billboardGui
+        local textoNome = Instance.new("TextLabel")
+        textoNome.Size = UDim2.new(1, 0, 1, 0)
+        textoNome.BackgroundTransparency = 1
+        textoNome.TextColor3 = corESP
+        textoNome.Text = jogador.Name
+        textoNome.TextScaled = true
+        textoNome.Parent = painelNome
     end
 end
 
--- Função melhorada para atualizar ESP
-local function updateESP()
-    while _G.espEnabled do
-        for _, player in pairs(game.Players:GetPlayers()) do
-            if player ~= game.Players.LocalPlayer then
-                drawESP(player)
+-- Função para atualizar ESP
+local function atualizarESP()
+    while _G.espAtivado do
+        for _, jogador in pairs(game.Players:GetPlayers()) do
+            if jogador ~= game.Players.LocalPlayer then
+                desenharESP(jogador)
             end
         end
         wait(0.1)
     end
 end
 
--- Função aprimorada de aimbot com suavização
+-- Função de aimbot
 local function aimbot()
-    while _G.aimbotEnabled do
-        local closestPlayer = nil
-        local shortestDistance = math.huge
-        local localPlayer = game.Players.LocalPlayer
+    while _G.aimbotAtivado do
+        local jogadorMaisProximo = nil
+        local menorDistancia = math.huge
+        local jogadorLocal = game.Players.LocalPlayer
         
-        if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            for _, player in pairs(game.Players:GetPlayers()) do
-                if player ~= localPlayer and player.Character and 
-                   player.Character:FindFirstChild("Head") and 
-                   player.Character:FindFirstChild("Humanoid") and
-                   player.Character.Humanoid.Health > 0 then
+        if jogadorLocal.Character and jogadorLocal.Character:FindFirstChild("HumanoidRootPart") then
+            for _, jogador in pairs(game.Players:GetPlayers()) do
+                if jogador ~= jogadorLocal and jogador.Character and 
+                   jogador.Character:FindFirstChild("Head") and 
+                   jogador.Character:FindFirstChild("Humanoid") and
+                   jogador.Character.Humanoid.Health > 0 then
                     
-                    local distance = (player.Character.Head.Position - localPlayer.Character.Head.Position).magnitude
-                    if distance < shortestDistance then
-                        closestPlayer = player
-                        shortestDistance = distance
+                    local distancia = (jogador.Character.Head.Position - jogadorLocal.Character.Head.Position).magnitude
+                    if distancia < menorDistancia then
+                        jogadorMaisProximo = jogador
+                        menorDistancia = distancia
                     end
                 end
             end
 
-            if closestPlayer and closestPlayer.Character then
-                local headPosition = closestPlayer.Character.Head.Position
-                local currentCFrame = localPlayer.Character.HumanoidRootPart.CFrame
-                local targetCFrame = CFrame.new(currentCFrame.Position, headPosition)
+            if jogadorMaisProximo and jogadorMaisProximo.Character then
+                local posicaoCabeca = jogadorMaisProximo.Character.Head.Position
+                local framePosicaoAtual = jogadorLocal.Character.HumanoidRootPart.CFrame
+                local frameAlvo = CFrame.new(framePosicaoAtual.Position, posicaoCabeca)
                 
                 -- Suavização do movimento
-                localPlayer.Character.HumanoidRootPart.CFrame = currentCFrame:Lerp(targetCFrame, aimbotSensitivity)
+                jogadorLocal.Character.HumanoidRootPart.CFrame = framePosicaoAtual:Lerp(frameAlvo, sensibilidadeAimbot)
             end
         end
         wait(0.01)
     end
 end
 
--- Botões e controles melhorados
-ESPSection:Toggle{
-    Name = "🟢 Enable ESP",
+-- Botões e controles
+SecaoESP:Toggle{
+    Name = "🟢 Ativar ESP",
     Default = false,
-    Callback = function(state)
-        _G.espEnabled = state
-        if state then
-            coroutine.wrap(updateESP)()
+    Callback = function(estado)
+        _G.espAtivado = estado
+        if estado then
+            coroutine.wrap(atualizarESP)()
         else
             -- Limpa todas as caixas ESP
-            for _, player in pairs(game.Players:GetPlayers()) do
-                if player.Character then
-                    for _, v in pairs(player.Character:GetChildren()) do
+            for _, jogador in pairs(game.Players:GetPlayers()) do
+                if jogador.Character then
+                    for _, v in pairs(jogador.Character:GetChildren()) do
                         if v:IsA("BoxHandleAdornment") or v:IsA("BillboardGui") then
                             v:Destroy()
                         end
@@ -129,45 +129,45 @@ ESPSection:Toggle{
     end
 }
 
-AimbotSection:Toggle{
-    Name = "🎯 Enable Aimbot",
+SecaoAimbot:Toggle{
+    Name = "🎯 Ativar Aimbot",
     Default = false,
-    Callback = function(state)
-        _G.aimbotEnabled = state
-        if state then
+    Callback = function(estado)
+        _G.aimbotAtivado = estado
+        if estado then
             coroutine.wrap(aimbot)()
         end
     end
 }
 
 -- Configurações avançadas
-ESPSection:Slider{
-    Name = "📏 ESP Box Size",
+SecaoESP:Slider{
+    Name = "📏 Tamanho da Caixa ESP",
     Min = 1,
     Max = 10,
     Default = 4,
-    Callback = function(value)
-        espSize = Vector3.new(value, value * 1.5, value * 0.25)
+    Callback = function(valor)
+        tamanhoESP = Vector3.new(valor, valor * 1.5, valor * 0.25)
     end
 }
 
-ESPSection:ColorPicker{
-    Name = "🎨 ESP Color",
-    Default = Color3.fromRGB(0, 255, 0),
-    Callback = function(color)
-        espColor = color
+SecaoESP:ColorPicker{
+    Name = "🎨 Cor do ESP",
+    Default = Color3.fromRGB(255, 0, 0),
+    Callback = function(cor)
+        corESP = cor
     end
 }
 
-AimbotSection:Slider{
-    Name = "⚡ Aimbot Sensitivity",
+SecaoAimbot:Slider{
+    Name = "⚡ Sensibilidade do Aimbot",
     Min = 0.1,
     Max = 1,
     Default = 0.5,
-    Callback = function(value)
-        aimbotSensitivity = value
+    Callback = function(valor)
+        sensibilidadeAimbot = valor
     end
 }
 
 -- Adiciona informações extras
-MainTab:Label{ Text = "⚠️ Use responsibly and enjoy! ⚠️" }
+MenuPrincipal:Label{ Text = "⚠️ Use com responsabilidade! ⚠️" }
