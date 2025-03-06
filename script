@@ -21,13 +21,14 @@ local aimbotEnabled = false
 
 -- Função para desenhar caixas ao redor dos jogadores
 local function drawESP(player)
-    if player and player ~= game.Players.LocalPlayer then
+    if player and player ~= game.Players.LocalPlayer and player.Character then
         local box = Instance.new("BoxHandleAdornment")
         box.Size = Vector3.new(4, 6, 1)
         box.Adornee = player.Character
         box.Color3 = Color3.new(0, 1, 0) -- Cor verde para melhor visibilidade
         box.AlwaysOnTop = true
         box.ZIndex = 10
+        box.Transparency = 0.5 -- Transparência para um visual mais suave
         box.Parent = game.Workspace
     end
 end
@@ -39,7 +40,7 @@ local function updateESP()
     end
 end
 
--- Função básica de aimbot
+-- Função aprimorada de aimbot
 local function aimbot()
     local closestPlayer = nil
     local shortestDistance = math.huge
@@ -54,8 +55,10 @@ local function aimbot()
         end
     end
 
-    if closestPlayer then
-        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, closestPlayer.Character.Head.Position)
+    if closestPlayer and closestPlayer.Character and closestPlayer.Character:FindFirstChild("Head") then
+        local headPosition = closestPlayer.Character.Head.Position
+        local localPlayer = game.Players.LocalPlayer
+        localPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(localPlayer.Character.HumanoidRootPart.Position, headPosition)
     end
 end
 
@@ -69,6 +72,13 @@ ESPSection:Toggle{
             while espEnabled do
                 updateESP()
                 wait(1)
+            end
+        else
+            -- Limpa as caixas ESP quando desativado
+            for _, v in pairs(game.Workspace:GetChildren()) do
+                if v:IsA("BoxHandleAdornment") then
+                    v:Destroy()
+                end
             end
         end
     end
