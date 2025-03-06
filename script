@@ -1,27 +1,38 @@
 -- Configurações gerais do script
 local Config = {
     ESP = {
-        Ativado = true,
-        Cor = Color3.fromRGB(0, 255, 0), -- Cor verde para melhor visibilidade
-        Tamanho = Vector3.new(4, 6, 1),
-        Transparencia = 0.1, -- Menos visível para um efeito mais bonito
-        AtualizacaoDelay = 0.05, -- Atualiza mais rápido
-        MostrarNomes = true,
-        MostrarDistancia = true,
-        MostrarVida = true,
-        Estilo = Enum.Material.Neon -- Novo parâmetro para deixar o ESP mais bonito
+        Ativado = true,  -- Ativar por padrão para testes
+        Cor = Color3.fromRGB(0, 255, 0),  -- Mudança de cor para verde
+        Tamanho = Vector3.new(5, 7, 1),
+        Transparencia = 0.3,  -- Aumentar a transparência
+        AtualizacaoDelay = 0.05,  -- Reduzir o delay para atualização mais rápida
+        MostrarNomes = true,  -- Adicionar opção para mostrar nomes
+        MostrarDistancia = true,  -- Adicionar opção para mostrar distância
+        MostrarVida = true,  -- Adicionar opção para mostrar vida
+        Estilo = Enum.Material.Neon  -- Mudar estilo para Neon
     },
     Aimbot = {
-        Ativado = true,
-        Sensibilidade = 0.1, -- Aumenta a suavização do movimento
-        AlcanceMaximo = 800,
-        MiraNaCabeca = true,
-        SuavizacaoMovimento = true,
-        AtualizacaoDelay = 0.01, -- Aumenta a frequência de atualização
-        AjusteDeAngulo = 0.2, -- Novo parâmetro para ajuste de ângulo
-        SilentAim = true -- Novo parâmetro para Silent Aim
+        Ativado = true,  -- Ativar por padrão para testes
+        Sensibilidade = 0.1,  -- Aumentar a sensibilidade
+        AlcanceMaximo = 800,  -- Aumentar o alcance máximo
+        MiraNaCabeca = true,  -- Adicionar opção para mirar na cabeça
+        SuavizacaoMovimento = true,  -- Ativar suavização de movimento
+        AtualizacaoDelay = 0.03,  -- Reduzir o delay para atualização mais rápida
+        AjusteDeAngulo = 0.2,  -- Aumentar ajuste de ângulo
+        SilentAim = true  -- Ativar Silent Aim por padrão
     }
 }
+
+-- Função para remover ESP antigo
+local function removerESP(jogador)
+    if jogador.Character then
+        for _, v in pairs(jogador.Character:GetChildren()) do
+            if v:IsA("BoxHandleAdornment") or v:IsA("BillboardGui") then
+                v:Destroy()
+            end
+        end
+    end
+end
 
 -- Função para criar ESP
 local function desenharESP(jogador)
@@ -30,56 +41,41 @@ local function desenharESP(jogador)
     end
     
     pcall(function()
-        -- Remove ESP antigo
-        for _, v in pairs(jogador.Character:GetChildren()) do
-            if v:IsA("BoxHandleAdornment") or v:IsA("BillboardGui") then
-                v:Destroy()
-            end
-        end
+        removerESP(jogador)
         
-        -- Cria um contorno em volta do personagem
         local contorno = Instance.new("BoxHandleAdornment")
-        contorno.Size = Config.ESP.Tamanho + Vector3.new(0.2, 0.2, 0.2) -- Aumenta o tamanho para criar um contorno
+        contorno.Size = Config.ESP.Tamanho + Vector3.new(0.5, 0.5, 0.5)  -- Aumentar o tamanho do contorno
         contorno.Adornee = jogador.Character
         contorno.Color3 = Config.ESP.Cor
         contorno.AlwaysOnTop = true
         contorno.ZIndex = 10
         contorno.Transparency = Config.ESP.Transparencia
-        contorno.Material = Config.ESP.Estilo -- Aplica o novo estilo
+        contorno.Material = Config.ESP.Estilo
         contorno.Parent = jogador.Character
-        
-        -- Exibe informações do jogador
-        if Config.ESP.MostrarNomes and jogador.Character:FindFirstChild("Head") then
-            local infoPanel = Instance.new("BillboardGui")
-            infoPanel.Size = UDim2.new(0, 200, 0, 60)
-            infoPanel.StudsOffset = Vector3.new(0, 3, 0)
-            infoPanel.Adornee = jogador.Character.Head
-            infoPanel.Parent = jogador.Character
-
-            local info = Instance.new("TextLabel")
-            info.Size = UDim2.new(1, 0, 1, 0)
-            info.BackgroundTransparency = 1
-            info.TextColor3 = Config.ESP.Cor
-            info.Font = Enum.Font.GothamBold
-            info.TextScaled = true
-            info.TextStrokeTransparency = 0.5 -- Adiciona contorno ao texto
-            
-            local distancia = math.floor((game.Players.LocalPlayer.Character.Head.Position - jogador.Character.Head.Position).Magnitude)
-            local vida = math.floor(jogador.Character:FindFirstChild("Humanoid") and jogador.Character.Humanoid.Health or 0)
-            
-            info.Text = string.format("%s\nDist: %d\nHP: %d%%", jogador.Name, distancia, vida)
-            info.Parent = infoPanel
-        end
     end)
 end
 
--- Loop contínuo para atualizar ESP
+-- Função para atualizar ESP
 local function atualizarESP()
     while Config.ESP.Ativado do
         pcall(function()
             for _, jogador in ipairs(game.Players:GetPlayers()) do
                 if jogador ~= game.Players.LocalPlayer then
                     desenharESP(jogador)
+                    if Config.ESP.MostrarNomes then
+                        -- Adicionar nome do jogador
+                        local nomeTag = Instance.new("BillboardGui")
+                        nomeTag.Size = UDim2.new(0, 100, 0, 50)
+                        nomeTag.Adornee = jogador.Character.Head
+                        nomeTag.AlwaysOnTop = true
+                        local nomeLabel = Instance.new("TextLabel", nomeTag)
+                        nomeLabel.Text = jogador.Name
+                        nomeLabel.Size = UDim2.new(1, 0, 1, 0)
+                        nomeLabel.BackgroundTransparency = 1
+                        nomeLabel.TextColor3 = Color3.new(1, 1, 1)
+                        nomeLabel.TextStrokeTransparency = 0.5
+                        nomeTag.Parent = jogador.Character.Head
+                    end
                 end
             end
         end)
@@ -88,6 +84,26 @@ local function atualizarESP()
 end
 
 task.spawn(atualizarESP)
+
+-- Função para encontrar o jogador mais próximo
+local function encontrarJogadorMaisProximo(jogadorLocal)
+    local jogadorMaisProximo, menorDistancia = nil, Config.Aimbot.AlcanceMaximo
+    
+    for _, jogador in ipairs(game.Players:GetPlayers()) do
+        if jogador ~= jogadorLocal and jogador.Character and jogador.Character:FindFirstChild("Head") and 
+           jogador.Character:FindFirstChild("Humanoid") and jogador.Character.Humanoid.Health > 0 and 
+           jogador.Team ~= jogadorLocal.Team then
+            
+            local distancia = (jogador.Character.Head.Position - jogadorLocal.Character.Head.Position).Magnitude
+            if distancia < menorDistancia then
+                jogadorMaisProximo = jogador
+                menorDistancia = distancia
+            end
+        end
+    end
+    
+    return jogadorMaisProximo
+end
 
 -- Função do Aimbot
 local function aimbot()
@@ -101,45 +117,18 @@ local function aimbot()
                         return 
                     end
                     
-                    local jogadorMaisProximo, menorDistancia = nil, Config.Aimbot.AlcanceMaximo
-                    
-                    for _, jogador in ipairs(game.Players:GetPlayers()) do
-                        if  jogador ~= jogadorLocal and 
-                            jogador.Character and 
-                            jogador.Character:FindFirstChild("Head") and 
-                            jogador.Character:FindFirstChild("Humanoid") and 
-                            jogador.Character.Humanoid.Health > 0 and 
-                            jogador.Team ~= jogadorLocal.Team then -- Não mira em jogadores do mesmo time
-                            
-                            local distancia = (jogador.Character.Head.Position - jogadorLocal.Character.Head.Position).Magnitude
-                            if distancia < menorDistancia then
-                                jogadorMaisProximo = jogador
-                                menorDistancia = distancia
-                            end
-                        end
-                    end
+                    local jogadorMaisProximo = encontrarJogadorMaisProximo(jogadorLocal)
 
                     if jogadorMaisProximo and jogadorMaisProximo.Character then
-                        local alvo = Config.Aimbot.MiraNaCabeca and 
-                                    jogadorMaisProximo.Character.Head.Position or 
-                                    jogadorMaisProximo.Character.HumanoidRootPart.Position
-                        
+                        local alvo = jogadorMaisProximo.Character.HumanoidRootPart.Position
                         local framePosicaoAtual = jogadorLocal.Character.HumanoidRootPart.CFrame
                         local frameAlvo = CFrame.new(framePosicaoAtual.Position, alvo)
                         
-                        -- Silent Aim
                         if Config.Aimbot.SilentAim then
                             local anguloAjustado = (alvo - framePosicaoAtual.Position).unit * Config.Aimbot.AjusteDeAngulo
                             jogadorLocal.Character.HumanoidRootPart.CFrame = CFrame.new(framePosicaoAtual.Position) * CFrame.Angles(0, math.atan2(anguloAjustado.Z, anguloAjustado.X), 0)
                         else
-                            -- Melhorar a suavização do movimento
-                            if Config.Aimbot.SuavizacaoMovimento then
-                                local suavizacao = Config.Aimbot.Sensibilidade * (1 / (1 + menorDistancia / Config.Aimbot.AlcanceMaximo))
-                                jogadorLocal.Character.HumanoidRootPart.CFrame = 
-                                    CFrame.new(framePosicaoAtual.Position):Lerp(frameAlvo, suavizacao)
-                            else
-                                jogadorLocal.Character.HumanoidRootPart.CFrame = frameAlvo
-                            end
+                            jogadorLocal.Character.HumanoidRootPart.CFrame = frameAlvo
                         end
                     end
                 end)
