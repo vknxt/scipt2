@@ -25,7 +25,9 @@ local ErrorLogger = {
         Info = true,
         Warning = true,
         Error = true,
-        Critical = true
+        Critical = true,
+        Success = true,
+        Debug = true
     },
     Logs = {},
     Colors = {
@@ -137,24 +139,29 @@ function ErrorLogger:ExportLogs()
     end
     
     -- Copiar para a área de transferência se possível
-    if setclipboard then
-        setclipboard(exportText)
-        print("[TGMenu] Logs copiados para a área de transferência")
-    end
+    pcall(function()
+        if setclipboard then
+            setclipboard(exportText)
+            print("[TGMenu] Logs copiados para a área de transferência")
+        end
+    end)
     
     return exportText
 end
 
--- Capturar erros não tratados
+-- Capturar erros não tratados de forma segura
 local oldError = error
-error = function(message, level)
-    ErrorLogger:Critical("Erro não tratado", message)
-    oldError(message, level)
+local function safeError(message, level)
+    pcall(function()
+        ErrorLogger:Critical("Erro não tratado", message)
+    end)
+    return oldError(message, level or 1)
 end
+error = safeError
 
--- Sobrescrever a função print para capturar logs
+-- Sobrescrever a função print para capturar logs de forma segura
 local oldPrint = print
-print = function(...)
+local function safePrint(...)
     local args = {...}
     local message = ""
     
@@ -162,18 +169,22 @@ print = function(...)
         message = message .. tostring(v) .. (i < #args and " " or "")
     end
     
-    if string.find(message, "^%[TGMenu%]") then
-        -- Já é um log do TGMenu, não precisa processar novamente
-        oldPrint(...)
-    else
-        ErrorLogger:Info("Print", message)
-        oldPrint(...)
-    end
+    pcall(function()
+        if string.find(message, "^%[TGMenu%]") then
+            -- Já é um log do TGMenu, não precisa processar novamente
+            oldPrint(...)
+        else
+            ErrorLogger:Info("Print", message)
+        end
+    end)
+    
+    return oldPrint(...)
 end
+print = safePrint
 
--- Sobrescrever a função warn para capturar avisos
+-- Sobrescrever a função warn para capturar avisos de forma segura
 local oldWarn = warn
-warn = function(...)
+local function safeWarn(...)
     local args = {...}
     local message = ""
     
@@ -181,14 +192,18 @@ warn = function(...)
         message = message .. tostring(v) .. (i < #args and " " or "")
     end
     
-    if string.find(message, "^%[TGMenu%]") then
-        -- Já é um log do TGMenu, não precisa processar novamente
-        oldWarn(...)
-    else
-        ErrorLogger:Warning("Warn", message)
-        oldWarn(...)
-    end
+    pcall(function()
+        if string.find(message, "^%[TGMenu%]") then
+            -- Já é um log do TGMenu, não precisa processar novamente
+            oldWarn(...)
+        else
+            ErrorLogger:Warning("Warn", message)
+        end
+    end)
+    
+    return oldWarn(...)
 end
+warn = safeWarn
 
 -- Inicializar o logger
 ErrorLogger:Info("Sistema de log inicializado", "TGMenu está pronto para registrar eventos")
@@ -711,27 +726,27 @@ local Themes = {
 
 -- Configurações do TG Menu
 local TGSettings = {
-    Enabled = false,
-    Language = "en", -- Idioma padrão
-    Theme = "dark", -- Tema padrão
+    Enabled = true,
+    Language = "en",
+    Theme = "dark",
     
     -- Configurações de Aimbot
     AimbotEnabled = false,
     AimbotKey = Enum.KeyCode.X,
     AimbotSensitivity = 0.5,
     AimbotMaxDistance = 1000,
-    AimbotTargetPart = "Head", -- "Head", "Torso", "Random"
+    AimbotTargetPart = "Head",
     AimbotVisibilityCheck = false,
     AimbotTeamCheck = true,
-    AimbotSmoothness = 0.5, -- 0-1, quanto maior mais suave
+    AimbotSmoothness = 0.5,
     AimbotFOV = 250,
     AimbotShowFOV = true,
     AimbotFOVColor = Color3.fromRGB(255, 255, 255),
     
     -- Configurações de Silent Aim
     SilentAimEnabled = false,
-    SilentAimHitChance = 70, -- Porcentagem de acerto
-    SilentAimHeadshotChance = 50, -- Porcentagem de headshot
+    SilentAimHitChance = 70,
+    SilentAimHeadshotChance = 50,
     SilentAimFOV = 200,
     SilentAimShowFOV = true,
     SilentAimFOVColor = Color3.fromRGB(255, 0, 0),
@@ -740,13 +755,13 @@ local TGSettings = {
     
     -- Configurações de Recoil
     RecoilEnabled = false,
-    RecoilReduction = 80, -- Porcentagem de redução (0-100)
+    RecoilReduction = 80,
     RecoilControlX = true,
     RecoilControlY = true,
     
     -- Configurações de Spread
     SpreadEnabled = false,
-    SpreadReduction = 80, -- Porcentagem de redução (0-100)
+    SpreadReduction = 80,
     
     -- Configurações de ESP
     ESPEnabled = false,
