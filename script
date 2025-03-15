@@ -15,6 +15,184 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
 
+-- Sistema de log de erro avançado
+local ErrorLogger = {
+    Enabled = true,
+    LogToConsole = true,
+    SaveLogs = true,
+    MaxLogs = 100,
+    LogLevel = {
+        Info = true,
+        Warning = true,
+        Error = true,
+        Critical = true
+    },
+    Logs = {},
+    Colors = {
+        Info = "⚪ %s",
+        Warning = "🟡 %s",
+        Error = "🔴 %s",
+        Critical = "⛔ %s",
+        Success = "🟢 %s",
+        Debug = "🔵 %s"
+    }
+}
+
+function ErrorLogger:FormatTime()
+    local date = os.date("*t")
+    return string.format("%02d:%02d:%02d", date.hour, date.min, date.sec)
+}
+
+function ErrorLogger:Log(level, message, details, stacktrace)
+    if not self.Enabled or not self.LogLevel[level] then return end
+    
+    local timestamp = self:FormatTime()
+    local logEntry = {
+        Level = level,
+        Message = message,
+        Details = details or "No details provided",
+        Timestamp = timestamp,
+        Stacktrace = stacktrace or debug.traceback(),
+        Script = getfenv(2).script and getfenv(2).script:GetFullName() or "Unknown Script"
+    }
+    
+    table.insert(self.Logs, 1, logEntry)
+    
+    -- Limitar o número de logs armazenados
+    if #self.Logs > self.MaxLogs then
+        table.remove(self.Logs, #self.Logs)
+    }
+    
+    -- Formatar a mensagem para o console
+    local formattedMessage = string.format(
+        "[TGMenu] [%s] [%s] %s\n%s\n%s",
+        timestamp,
+        level,
+        message,
+        details and ("Details: " .. tostring(details)) or "",
+        "Script: " .. logEntry.Script
+    )
+    
+    -- Colorir a mensagem baseado no nível
+    local coloredMessage = string.format(self.Colors[level] or "%s", formattedMessage)
+    
+    -- Enviar para o console
+    if self.LogToConsole then
+        if level == "Error" or level == "Critical" then
+            warn(coloredMessage)
+            if stacktrace then
+                warn("Stacktrace:\n" .. stacktrace)
+            end
+        elseif level == "Warning" then
+            warn(coloredMessage)
+        else
+            print(coloredMessage)
+        end
+    end
+    
+    return logEntry
+}
+
+function ErrorLogger:Info(message, details)
+    return self:Log("Info", message, details)
+end
+
+function ErrorLogger:Warning(message, details)
+    return self:Log("Warning", message, details)
+end
+
+function ErrorLogger:Error(message, details)
+    return self:Log("Error", message, details)
+end
+
+function ErrorLogger:Critical(message, details)
+    return self:Log("Critical", message, details)
+end
+
+function ErrorLogger:Success(message, details)
+    return self:Log("Success", message, details)
+end
+
+function ErrorLogger:Debug(message, details)
+    return self:Log("Debug", message, details)
+end
+
+function ErrorLogger:ClearLogs()
+    self.Logs = {}
+    print("[TGMenu] Logs limpos com sucesso")
+end
+
+function ErrorLogger:ExportLogs()
+    local exportText = "=== TGMenu Logs ===\n\n"
+    
+    for i, log in ipairs(self.Logs) do
+        exportText = exportText .. string.format(
+            "[%s] [%s] %s\nDetails: %s\nScript: %s\n\n",
+            log.Timestamp,
+            log.Level,
+            log.Message,
+            log.Details,
+            log.Script
+        )
+    end
+    
+    -- Copiar para a área de transferência se possível
+    if setclipboard then
+        setclipboard(exportText)
+        print("[TGMenu] Logs copiados para a área de transferência")
+    end
+    
+    return exportText
+end
+
+-- Capturar erros não tratados
+local oldError = error
+error = function(message, level)
+    ErrorLogger:Critical("Erro não tratado", message)
+    oldError(message, level)
+end
+
+-- Sobrescrever a função print para capturar logs
+local oldPrint = print
+print = function(...)
+    local args = {...}
+    local message = ""
+    
+    for i, v in ipairs(args) do
+        message = message .. tostring(v) .. (i < #args and " " or "")
+    end
+    
+    if string.find(message, "^%[TGMenu%]") then
+        -- Já é um log do TGMenu, não precisa processar novamente
+        oldPrint(...)
+    else
+        ErrorLogger:Info("Print", message)
+        oldPrint(...)
+    end
+end
+
+-- Sobrescrever a função warn para capturar avisos
+local oldWarn = warn
+warn = function(...)
+    local args = {...}
+    local message = ""
+    
+    for i, v in ipairs(args) do
+        message = message .. tostring(v) .. (i < #args and " " or "")
+    end
+    
+    if string.find(message, "^%[TGMenu%]") then
+        -- Já é um log do TGMenu, não precisa processar novamente
+        oldWarn(...)
+    else
+        ErrorLogger:Warning("Warn", message)
+        oldWarn(...)
+    end
+end
+
+-- Inicializar o logger
+ErrorLogger:Info("Sistema de log inicializado", "TGMenu está pronto para registrar eventos")
+
 -- Sistema de idiomas
 local Languages = {
     ["en"] = { -- English
