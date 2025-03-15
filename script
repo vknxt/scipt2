@@ -11,9 +11,47 @@ local LocalizationService = game:GetService("LocalizationService")
 local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
 
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-local Mouse = LocalPlayer:GetMouse()
+-- Verificar se os serviços estão disponíveis antes de usá-los
+local function SafeGetService(serviceName)
+    local success, service = pcall(function()
+        return game:GetService(serviceName)
+    end)
+    
+    if success and service then
+        return service
+    else
+        warn("Não foi possível obter o serviço: " .. serviceName)
+        return nil
+    end
+end
+
+-- Usar a função SafeGetService para todos os serviços
+Players = SafeGetService("Players") or Players
+RunService = SafeGetService("RunService") or RunService
+UserInputService = SafeGetService("UserInputService") or UserInputService
+TweenService = SafeGetService("TweenService") or TweenService
+ReplicatedStorage = SafeGetService("ReplicatedStorage") or ReplicatedStorage
+LocalizationService = SafeGetService("LocalizationService") or LocalizationService
+CoreGui = SafeGetService("CoreGui") or CoreGui
+Lighting = SafeGetService("Lighting") or Lighting
+
+-- Verificar se Players está disponível antes de acessar LocalPlayer
+local LocalPlayer = Players and Players.LocalPlayer
+local Camera = workspace and workspace.CurrentCamera
+local Mouse = LocalPlayer and LocalPlayer:GetMouse()
+
+-- Verificar se todos os componentes necessários estão disponíveis
+if not LocalPlayer then
+    warn("LocalPlayer não está disponível. O script pode não funcionar corretamente.")
+end
+
+if not Camera then
+    warn("Camera não está disponível. O script pode não funcionar corretamente.")
+end
+
+if not Mouse then
+    warn("Mouse não está disponível. O script pode não funcionar corretamente.")
+end
 
 -- Sistema de log de erro avançado
 local ErrorLogger = {
