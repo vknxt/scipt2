@@ -41,7 +41,7 @@ local ErrorLogger = {
 function ErrorLogger:FormatTime()
     local date = os.date("*t")
     return string.format("%02d:%02d:%02d", date.hour, date.min, date.sec)
-}
+end
 
 function ErrorLogger:Log(level, message, details, stacktrace)
     if not self.Enabled or not self.LogLevel[level] then return end
@@ -61,7 +61,7 @@ function ErrorLogger:Log(level, message, details, stacktrace)
     -- Limitar o número de logs armazenados
     if #self.Logs > self.MaxLogs then
         table.remove(self.Logs, #self.Logs)
-    }
+    end
     
     -- Formatar a mensagem para o console
     local formattedMessage = string.format(
@@ -91,7 +91,7 @@ function ErrorLogger:Log(level, message, details, stacktrace)
     end
     
     return logEntry
-}
+end
 
 function ErrorLogger:Info(message, details)
     return self:Log("Info", message, details)
