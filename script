@@ -1,334 +1,1293 @@
-getgenv().SecureMode = true
+-- TGMenu.lua
+-- Um sistema de cheat avançado para jogos estilo CS no Roblox com suporte multilíngue
+-- Este script deve ser executado em um executor para Roblox
 
-local Rayfield = loadstring(game:HttpGet('https://[Log in to view URL]'))()
-
-local Window = Rayfield:CreateWindow({
-   Name = "factory",
-   LoadingTitle = "factory",
-   LoadingSubtitle = "by Sirius",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = nil, -- Create a custom folder for your hub/game
-      FileName = "Big Hub"
-   },
-   Discord = {
-      Enabled = false,
-      Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
-      RememberJoins = true -- Set this to false to make them join the discord every time they load it up
-   },
-   KeySystem = false, -- Set this to true to use our key system
-   KeySettings = {
-      Title = "Untitled",
-      Subtitle = "Key System",
-      Note = "No method of obtaining the key is provided",
-      FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
-      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
-      GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-      Key = {"Hello"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
-   }
-})
-
-local MainTab = Window:CreateTab("Factory", nil) -- Title, Image
-local MainSection = MainTab:CreateSection("Main")
-
-Rayfield:Notify({
-   Title = "Executed successfully",
-   Content = "Notification Content",
-   Duration = 3,
-   Image = nil,
-   Actions = { -- Notification Buttons
-      Ignore = {
-         Name = "Okay!",
-         Callback = function()
-         print("The user tapped Okay!")
-      end
-   },
-},
-})
-
-local Button = MainTab:CreateButton({
-   Name = "Aimbot",
-   Callback = function()
-   local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalizationService = game:GetService("LocalizationService")
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
+
 local LocalPlayer = Players.LocalPlayer
-local Holding = false
-
-_G.AimbotEnabled = true
-_G.TeamCheck = false -- If set to true then the script would only lock your aim at enemy team members.
-_G.AimPart = "Head" -- Where the aimbot script would lock at.
-_G.Sensitivity = 0 -- How many seconds it takes for the aimbot script to officially lock onto the target's aimpart.
-
-local function GetClosestPlayer()
-	local MaximumDistance = math.huge
-	local Target = nil
-  
-  	coroutine.wrap(function()
-    		wait(20); MaximumDistance = math.huge -- Reset the MaximumDistance so that the Aimbot doesn't remember it as a very small variable and stop capturing players...
-  	end)()
-
-	for _, v in next, Players:GetPlayers() do
-		if v.Name ~= LocalPlayer.Name then
-			if _G.TeamCheck == true then
-				if v.Team ~= LocalPlayer.Team then
-					if v.Character ~= nil then
-						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
-							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-								local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
-								local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-								
-								if VectorDistance < MaximumDistance then
-									Target = v
-                  							MaximumDistance = VectorDistance
-								end
-							end
-						end
-					end
-				end
-			else
-				if v.Character ~= nil then
-					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
-						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-							local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
-							local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-							
-							if VectorDistance < MaximumDistance then
-								Target = v
-               							MaximumDistance = VectorDistance
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-
-	return Target
-end
-
-UserInputService.InputBegan:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-        Holding = true
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-        Holding = false
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if Holding == true and _G.AimbotEnabled == true then
-        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
-    end
-end)
-   end,
-})
-
-local EspTab = Window:CreateTab("Esp", nil) -- Title, Image
-local Section = EspTab:CreateSection("Esp")
-
-local Button = Tab:CreateButton({
-   Name = "Button Example",
-   Callback = function()
-   local function API_Check()
-    if Drawing == nil then
-        return "No"
-    else
-        return "Yes"
-    end
-end
-
-local Find_Required = API_Check()
-
-if Find_Required == "No" then
-    game:GetService("StarterGui"):SetCore("SendNotification",{
-        Title = "Exunys Developer";
-        Text = "ESP script could not be loaded because your exploit is unsupported.";
-        Duration = math.huge;
-        Button1 = "OK"
-    })
-
-    return
-end
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
 
-local Typing = false
+-- Sistema de idiomas
+local Languages = {
+    ["en"] = { -- English
+        title = "TG Menu",
+        close = "Close",
+        minimize = "Minimize",
+        tabs = {
+            aimbot = "Aimbot",
+            silentaim = "Silent Aim",
+            recoil = "Recoil",
+            spread = "Spread",
+            esp = "ESP",
+            settings = "Settings"
+        },
+        sections = {
+            general = "General",
+            targeting = "Targeting",
+            appearance = "Appearance",
+            configuration = "Configuration",
+            language = "Language",
+            theme = "Theme",
+            about = "About"
+        },
+        options = {
+            enabled = "Enabled",
+            key = "Key",
+            sensitivity = "Sensitivity",
+            smoothness = "Smoothness",
+            fov = "FOV",
+            showFov = "Show FOV",
+            maxDistance = "Max Distance",
+            targetPart = "Target Part",
+            visibilityCheck = "Visibility Check",
+            teamCheck = "Team Check",
+            hitChance = "Hit Chance",
+            headshotChance = "Headshot Chance",
+            reduction = "Reduction",
+            controlX = "Control X",
+            controlY = "Control Y",
+            boxes = "Boxes",
+            names = "Names",
+            distance = "Distance",
+            health = "Health",
+            tracers = "Tracers",
+            color = "Color",
+            transparency = "Transparency",
+            teamColor = "Team Color",
+            head = "Head",
+            torso = "Torso",
+            random = "Random",
+            selectLanguage = "Select Language",
+            selectTheme = "Select Theme",
+            resetSettings = "Reset Settings",
+            saveSettings = "Save Settings",
+            loadSettings = "Load Settings"
+        },
+        tooltips = {
+            aimbot = "Automatically aims at enemies",
+            silentaim = "Redirects bullets to enemies without visible aim movement",
+            recoil = "Reduces weapon recoil",
+            spread = "Reduces weapon spread/bullet deviation",
+            esp = "Shows visual information about enemies"
+        },
+        units = {
+            percent = "%",
+            pixels = "px",
+            meters = "m",
+            seconds = "s",
+            ms = "ms"
+        },
+        themes = {
+            dark = "Dark",
+            light = "Light",
+            purple = "Purple",
+            blue = "Blue",
+            red = "Red",
+            green = "Green",
+            neon = "Neon",
+            midnight = "Midnight"
+        },
+        about = {
+            version = "Version",
+            creator = "Created by",
+            description = "Advanced cheat menu for CS-style games"
+        }
+    },
+    ["es"] = { -- Spanish
+        title = "Menú TG",
+        close = "Cerrar",
+        minimize = "Minimizar",
+        tabs = {
+            aimbot = "Asistencia",
+            silentaim = "Tiro Silencioso",
+            recoil = "Retroceso",
+            spread = "Dispersión",
+            esp = "ESP",
+            settings = "Ajustes"
+        },
+        sections = {
+            general = "General",
+            targeting = "Objetivo",
+            appearance = "Apariencia",
+            configuration = "Configuración",
+            language = "Idioma",
+            theme = "Tema",
+            about = "Acerca de"
+        },
+        options = {
+            enabled = "Activado",
+            key = "Tecla",
+            sensitivity = "Sensibilidad",
+            smoothness = "Suavidad",
+            fov = "Campo Visual",
+            showFov = "Mostrar Campo",
+            maxDistance = "Distancia Máx",
+            targetPart = "Parte Objetivo",
+            visibilityCheck = "Verificar Visibilidad",
+            teamCheck = "Verificar Equipo",
+            hitChance = "Prob. de Acierto",
+            headshotChance = "Prob. de Cabeza",
+            reduction = "Reducción",
+            controlX = "Control X",
+            controlY = "Control Y",
+            boxes = "Cajas",
+            names = "Nombres",
+            distance = "Distancia",
+            health = "Salud",
+            tracers = "Trazadores",
+            color = "Color",
+            transparency = "Transparencia",
+            teamColor = "Color de Equipo",
+            head = "Cabeza",
+            torso = "Torso",
+            random = "Aleatorio",
+            selectLanguage = "Seleccionar Idioma",
+            selectTheme = "Seleccionar Tema",
+            resetSettings = "Restablecer Ajustes",
+            saveSettings = "Guardar Ajustes",
+            loadSettings = "Cargar Ajustes"
+        },
+        tooltips = {
+            aimbot = "Apunta automáticamente a los enemigos",
+            silentaim = "Redirige las balas a los enemigos sin movimiento visible",
+            recoil = "Reduce el retroceso del arma",
+            spread = "Reduce la dispersión de las balas",
+            esp = "Muestra información visual sobre los enemigos"
+        },
+        units = {
+            percent = "%",
+            pixels = "px",
+            meters = "m",
+            seconds = "s",
+            ms = "ms"
+        },
+        themes = {
+            dark = "Oscuro",
+            light = "Claro",
+            purple = "Púrpura",
+            blue = "Azul",
+            red = "Rojo",
+            green = "Verde",
+            neon = "Neón",
+            midnight = "Medianoche"
+        },
+        about = {
+            version = "Versión",
+            creator = "Creado por",
+            description = "Menú avanzado de trucos para juegos estilo CS"
+        }
+    },
+    ["pt"] = { -- Portuguese
+        title = "Menu TG",
+        close = "Fechar",
+        minimize = "Minimizar",
+        tabs = {
+            aimbot = "Mira Automática",
+            silentaim = "Mira Silenciosa",
+            recoil = "Recuo",
+            spread = "Dispersão",
+            esp = "ESP",
+            settings = "Configurações"
+        },
+        sections = {
+            general = "Geral",
+            targeting = "Alvo",
+            appearance = "Aparência",
+            configuration = "Configuração",
+            language = "Idioma",
+            theme = "Tema",
+            about = "Sobre"
+        },
+        options = {
+            enabled = "Ativado",
+            key = "Tecla",
+            sensitivity = "Sensibilidade",
+            smoothness = "Suavidade",
+            fov = "Campo de Visão",
+            showFov = "Mostrar Campo",
+            maxDistance = "Distância Máx",
+            targetPart = "Parte Alvo",
+            visibilityCheck = "Verificar Visibilidade",
+            teamCheck = "Verificar Equipe",
+            hitChance = "Chance de Acerto",
+            headshotChance = "Chance de Headshot",
+            reduction = "Redução",
+            controlX = "Controle X",
+            controlY = "Controle Y",
+            boxes = "Caixas",
+            names = "Nomes",
+            distance = "Distância",
+            health = "Vida",
+            tracers = "Traçadores",
+            color = "Cor",
+            transparency = "Transparência",
+            teamColor = "Cor da Equipe",
+            head = "Cabeça",
+            torso = "Torso",
+            random = "Aleatório",
+            selectLanguage = "Selecionar Idioma",
+            selectTheme = "Selecionar Tema",
+            resetSettings = "Redefinir Configurações",
+            saveSettings = "Salvar Configurações",
+            loadSettings = "Carregar Configurações"
+        },
+        tooltips = {
+            aimbot = "Mira automaticamente nos inimigos",
+            silentaim = "Redireciona balas para inimigos sem movimento visível da mira",
+            recoil = "Reduz o recuo da arma",
+            spread = "Reduz a dispersão/desvio das balas",
+            esp = "Mostra informações visuais sobre inimigos"
+        },
+        units = {
+            percent = "%",
+            pixels = "px",
+            meters = "m",
+            seconds = "s",
+            ms = "ms"
+        },
+        themes = {
+            dark = "Escuro",
+            light = "Claro",
+            purple = "Roxo",
+            blue = "Azul",
+            red = "Vermelho",
+            green = "Verde",
+            neon = "Neon",
+            midnight = "Meia-noite"
+        },
+        about = {
+            version = "Versão",
+            creator = "Criado por",
+            description = "Menu avançado de cheats para jogos estilo CS"
+        }
+    },
+    ["fr"] = { -- French
+        title = "Menu TG",
+        close = "Fermer",
+        minimize = "Réduire",
+        tabs = {
+            aimbot = "Visée Auto",
+            silentaim = "Visée Silencieuse",
+            recoil = "Recul",
+            spread = "Dispersion",
+            esp = "ESP",
+            settings = "Paramètres"
+        },
+        sections = {
+            general = "Général",
+            targeting = "Ciblage",
+            appearance = "Apparence",
+            configuration = "Configuration",
+            language = "Langue",
+            theme = "Thème",
+            about = "À propos"
+        },
+        options = {
+            enabled = "Activé",
+            key = "Touche",
+            sensitivity = "Sensibilité",
+            smoothness = "Fluidité",
+            fov = "Champ de Vision",
+            showFov = "Afficher Champ",
+            maxDistance = "Distance Max",
+            targetPart = "Partie Ciblée",
+            visibilityCheck = "Vérif. Visibilité",
+            teamCheck = "Vérif. Équipe",
+            hitChance = "Chance de Toucher",
+            headshotChance = "Chance Tête",
+            reduction = "Réduction",
+            controlX = "Contrôle X",
+            controlY = "Contrôle Y",
+            boxes = "Boîtes",
+            names = "Noms",
+            distance = "Distance",
+            health = "Santé",
+            tracers = "Traceurs",
+            color = "Couleur",
+            transparency = "Transparence",
+            teamColor = "Couleur Équipe",
+            head = "Tête",
+            torso = "Torse",
+            random = "Aléatoire",
+            selectLanguage = "Sélectionner Langue",
+            selectTheme = "Sélectionner Thème",
+            resetSettings = "Réinitialiser",
+            saveSettings = "Sauvegarder",
+            loadSettings = "Charger"
+        },
+        tooltips = {
+            aimbot = "Vise automatiquement les ennemis",
+            silentaim = "Redirige les balles vers les ennemis sans mouvement visible",
+            recoil = "Réduit le recul de l'arme",
+            spread = "Réduit la dispersion des balles",
+            esp = "Affiche des informations visuelles sur les ennemis"
+        },
+        units = {
+            percent = "%",
+            pixels = "px",
+            meters = "m",
+            seconds = "s",
+            ms = "ms"
+        },
+        themes = {
+            dark = "Sombre",
+            light = "Clair",
+            purple = "Violet",
+            blue = "Bleu",
+            red = "Rouge",
+            green = "Vert",
+            neon = "Néon",
+            midnight = "Minuit"
+        },
+        about = {
+            version = "Version",
+            creator = "Créé par",
+            description = "Menu de triche avancé pour les jeux style CS"
+        }
+    },
+    ["ru"] = { -- Russian
+        title = "Меню TG",
+        close = "Закрыть",
+        minimize = "Свернуть",
+        tabs = {
+            aimbot = "Аимбот",
+            silentaim = "Тихий Аим",
+            recoil = "Отдача",
+            spread = "Разброс",
+            esp = "ЕСП",
+            settings = "Настройки"
+        },
+        sections = {
+            general = "Общие",
+            targeting = "Прицеливание",
+            appearance = "Внешний вид",
+            configuration = "Конфигурация",
+            language = "Язык",
+            theme = "Тема",
+            about = "О программе"
+        },
+        options = {
+            enabled = "Включено",
+            key = "Клавиша",
+            sensitivity = "Чувствительность",
+            smoothness = "Плавность",
+            fov = "Поле зрения",
+            showFov = "Показать поле",
+            maxDistance = "Макс. дистанция",
+            targetPart = "Цель",
+            visibilityCheck = "Проверка видимости",
+            teamCheck = "Проверка команды",
+            hitChance = "Шанс попадания",
+            headshotChance = "Шанс в голову",
+            reduction = "Снижение",
+            controlX = "Контроль X",
+            controlY = "Контроль Y",
+            boxes = "Рамки",
+            names = "Имена",
+            distance = "Дистанция",
+            health = "Здоровье",
+            tracers = "Трассеры",
+            color = "Цвет",
+            transparency = "Прозрачность",
+            teamColor = "Цвет команды",
+            head = "Голова",
+            torso = "Торс",
+            random = "Случайно",
+            selectLanguage = "Выбрать язык",
+            selectTheme = "Выбрать тему",
+            resetSettings = "Сбросить настройки",
+            saveSettings = "Сохранить настройки",
+            loadSettings = "Загрузить настройки"
+        },
+        tooltips = {
+            aimbot = "Автоматически наводится на врагов",
+            silentaim = "Перенаправляет пули во врагов без видимого движения прицела",
+            recoil = "Уменьшает отдачу оружия",
+            spread = "Уменьшает разброс пуль",
+            esp = "Показывает визуальную информацию о врагах"
+        },
+        units = {
+            percent = "%",
+            pixels = "пикс",
+            meters = "м",
+            seconds = "с",
+            ms = "мс"
+        },
+        themes = {
+            dark = "Тёмная",
+            light = "Светлая",
+            purple = "Фиолетовая",
+            blue = "Синяя",
+            red = "Красная",
+            green = "Зелёная",
+            neon = "Неоновая",
+            midnight = "Полночь"
+        },
+        about = {
+            version = "Версия",
+            creator = "Создатель",
+            description = "Продвинутое меню читов для игр в стиле CS"
+        }
+    }
+}
 
-_G.SendNotifications = true   -- If set to true then the script would notify you frequently on any changes applied and when loaded / errored. (If a game can detect this, it is recommended to set it to false)
-_G.DefaultSettings = false   -- If set to true then the ESP script would run with default settings regardless of any changes you made.
+-- Temas disponíveis
+local Themes = {
+    dark = {
+        Background = Color3.fromRGB(25, 25, 35),
+        BackgroundSecondary = Color3.fromRGB(30, 30, 40),
+        Accent = Color3.fromRGB(0, 170, 255),
+        Text = Color3.fromRGB(255, 255, 255),
+        TextDimmed = Color3.fromRGB(180, 180, 180),
+        Border = Color3.fromRGB(50, 50, 60),
+        Success = Color3.fromRGB(0, 255, 127),
+        Warning = Color3.fromRGB(255, 165, 0),
+        Danger = Color3.fromRGB(255, 0, 0)
+    },
+    light = {
+        Background = Color3.fromRGB(240, 240, 245),
+        BackgroundSecondary = Color3.fromRGB(230, 230, 235),
+        Accent = Color3.fromRGB(0, 120, 215),
+        Text = Color3.fromRGB(30, 30, 30),
+        TextDimmed = Color3.fromRGB(100, 100, 100),
+        Border = Color3.fromRGB(200, 200, 210),
+        Success = Color3.fromRGB(0, 180, 90),
+        Warning = Color3.fromRGB(230, 140, 0),
+        Danger = Color3.fromRGB(220, 0, 0)
+    },
+    purple = {
+        Background = Color3.fromRGB(30, 20, 40),
+        BackgroundSecondary = Color3.fromRGB(40, 30, 50),
+        Accent = Color3.fromRGB(170, 80, 255),
+        Text = Color3.fromRGB(255, 255, 255),
+        TextDimmed = Color3.fromRGB(180, 180, 180),
+        Border = Color3.fromRGB(60, 50, 70),
+        Success = Color3.fromRGB(0, 255, 127),
+        Warning = Color3.fromRGB(255, 165, 0),
+        Danger = Color3.fromRGB(255, 0, 0)
+    },
+    blue = {
+        Background = Color3.fromRGB(20, 30, 45),
+        BackgroundSecondary = Color3.fromRGB(30, 40, 55),
+        Accent = Color3.fromRGB(0, 150, 255),
+        Text = Color3.fromRGB(255, 255, 255),
+        TextDimmed = Color3.fromRGB(180, 180, 180),
+        Border = Color3.fromRGB(40, 50, 65),
+        Success = Color3.fromRGB(0, 255, 127),
+        Warning = Color3.fromRGB(255, 165, 0),
+        Danger = Color3.fromRGB(255, 0, 0)
+    },
+    red = {
+        Background = Color3.fromRGB(40, 20, 20),
+        BackgroundSecondary = Color3.fromRGB(50, 30, 30),
+        Accent = Color3.fromRGB(255, 70, 70),
+        Text = Color3.fromRGB(255, 255, 255),
+        TextDimmed = Color3.fromRGB(180, 180, 180),
+        Border = Color3.fromRGB(60, 40, 40),
+        Success = Color3.fromRGB(0, 255, 127),
+        Warning = Color3.fromRGB(255, 165, 0),
+        Danger = Color3.fromRGB(255, 0, 0)
+    },
+    green = {
+        Background = Color3.fromRGB(20, 40, 30),
+        BackgroundSecondary = Color3.fromRGB(30, 50, 40),
+        Accent = Color3.fromRGB(70, 200, 120),
+        Text = Color3.fromRGB(255, 255, 255),
+        TextDimmed = Color3.fromRGB(180, 180, 180),
+        Border = Color3.fromRGB(40, 60, 50),
+        Success = Color3.fromRGB(0, 255, 127),
+        Warning = Color3.fromRGB(255, 165, 0),
+        Danger = Color3.fromRGB(255, 0, 0)
+    },
+    neon = {
+        Background = Color3.fromRGB(10, 10, 15),
+        BackgroundSecondary = Color3.fromRGB(15, 15, 20),
+        Accent = Color3.fromRGB(0, 255, 200),
+        Text = Color3.fromRGB(255, 255, 255),
+        TextDimmed = Color3.fromRGB(180, 180, 180),
+        Border = Color3.fromRGB(30, 30, 35),
+        Success = Color3.fromRGB(0, 255, 170),
+        Warning = Color3.fromRGB(255, 230, 0),
+        Danger = Color3.fromRGB(255, 50, 100)
+    },
+    midnight = {
+        Background = Color3.fromRGB(15, 15, 25),
+        BackgroundSecondary = Color3.fromRGB(20, 20, 30),
+        Accent = Color3.fromRGB(100, 100, 255),
+        Text = Color3.fromRGB(220, 220, 255),
+        TextDimmed = Color3.fromRGB(150, 150, 200),
+        Border = Color3.fromRGB(35, 35, 45),
+        Success = Color3.fromRGB(100, 200, 255),
+        Warning = Color3.fromRGB(255, 200, 100),
+        Danger = Color3.fromRGB(255, 100, 150)
+    }
+}
 
-_G.TeamCheck = false   -- If set to true then the script would create ESP only for the enemy team members.
+-- Configurações do TG Menu
+local TGSettings = {
+    Enabled = false,
+    Language = "en", -- Idioma padrão
+    Theme = "dark", -- Tema padrão
+    
+    -- Configurações de Aimbot
+    AimbotEnabled = false,
+    AimbotKey = Enum.KeyCode.X,
+    AimbotSensitivity = 0.5,
+    AimbotMaxDistance = 1000,
+    AimbotTargetPart = "Head", -- "Head", "Torso", "Random"
+    AimbotVisibilityCheck = false,
+    AimbotTeamCheck = true,
+    AimbotSmoothness = 0.5, -- 0-1, quanto maior mais suave
+    AimbotFOV = 250,
+    AimbotShowFOV = true,
+    AimbotFOVColor = Color3.fromRGB(255, 255, 255),
+    
+    -- Configurações de Silent Aim
+    SilentAimEnabled = false,
+    SilentAimHitChance = 70, -- Porcentagem de acerto
+    SilentAimHeadshotChance = 50, -- Porcentagem de headshot
+    SilentAimFOV = 200,
+    SilentAimShowFOV = true,
+    SilentAimFOVColor = Color3.fromRGB(255, 0, 0),
+    SilentAimVisibilityCheck = false,
+    SilentAimTeamCheck = true,
+    
+    -- Configurações de Recoil
+    RecoilEnabled = false,
+    RecoilReduction = 80, -- Porcentagem de redução (0-100)
+    RecoilControlX = true,
+    RecoilControlY = true,
+    
+    -- Configurações de Spread
+    SpreadEnabled = false,
+    SpreadReduction = 80, -- Porcentagem de redução (0-100)
+    
+    -- Configurações de ESP
+    ESPEnabled = false,
+    ESPBoxes = true,
+    ESPNames = true,
+    ESPDistance = true,
+    ESPHealth = true,
+    ESPTracers = false,
+    ESPColor = Color3.fromRGB(255, 0, 0),
+    ESPTeamCheck = true,
+    ESPTeamColor = true,
+    ESPTransparency = 0.7,
+    
+    -- Tema da UI
+    UITheme = Themes.dark,
+    
+    -- Animações
+    EnableAnimations = true,
+    AnimationSpeed = 0.3
+}
 
-_G.ESPVisible = true   -- If set to true then the ESP will be visible and vice versa.
-_G.TextColor = Color3.fromRGB(255, 80, 10)   -- The color that the boxes would appear as.
-_G.TextSize = 14   -- The size of the text.
-_G.Center = true   -- If set to true then the script would be located at the center of the label.
-_G.Outline = true   -- If set to true then the text would have an outline.
-_G.OutlineColor = Color3.fromRGB(0, 0, 0)   -- The outline color of the text.
-_G.TextTransparency = 0.7   -- The transparency of the text.
-_G.TextFont = Drawing.Fonts.UI   -- The font of the text. (UI, System, Plex, Monospace) 
-
-_G.DisableKey = Enum.KeyCode.Q   -- The key that disables / enables the ESP.
-
-local function CreateESP()
-    for _, v in next, Players:GetPlayers() do
-        if v.Name ~= Players.LocalPlayer.Name then
-            local ESP = Drawing.new("Text")
-
-            RunService.RenderStepped:Connect(function()
-                if workspace:FindFirstChild(v.Name) ~= nil and workspace[v.Name]:FindFirstChild("HumanoidRootPart") ~= nil then
-                    local Vector, OnScreen = Camera:WorldToViewportPoint(workspace[v.Name]:WaitForChild("Head", math.huge).Position)
-
-                    ESP.Size = _G.TextSize
-                    ESP.Center = _G.Center
-                    ESP.Outline = _G.Outline
-                    ESP.OutlineColor = _G.OutlineColor
-                    ESP.Color = _G.TextColor
-                    ESP.Transparency = _G.TextTransparency
-                    ESP.Font = _G.TextFont
-
-                    if OnScreen == true then
-                        local Part1 = workspace:WaitForChild(v.Name, math.huge):WaitForChild("HumanoidRootPart", math.huge).Position
-                        local Part2 = workspace:WaitForChild(Players.LocalPlayer.Name, math.huge):WaitForChild("HumanoidRootPart", math.huge).Position or 0
-                        local Dist = (Part1 - Part2).Magnitude
-                        ESP.Position = Vector2.new(Vector.X, Vector.Y - 25)
-                        ESP.Text = ("("..tostring(math.floor(tonumber(Dist)))..") "..v.Name.." ["..workspace[v.Name].Humanoid.Health.."]")
-                        if _G.TeamCheck == true then 
-                            if Players.LocalPlayer.Team ~= v.Team then
-                                ESP.Visible = _G.ESPVisible
-                            else
-                                ESP.Visible = false
-                            end
-                        else
-                            ESP.Visible = _G.ESPVisible
-                        end
-                    else
-                        ESP.Visible = false
-                    end
-                else
-                    ESP.Visible = false
-                end
-            end)
-
-            Players.PlayerRemoving:Connect(function()
-                ESP.Visible = false
-            end)
+-- Detectar idioma do jogador
+local function DetectPlayerLanguage()
+    local success, locale = pcall(function()
+        return LocalizationService.RobloxLocaleId
+    end)
+    
+    if success then
+        if locale:sub(1, 2) == "en" then
+            return "en"
+        elseif locale:sub(1, 2) == "es" then
+            return "es"
+        elseif locale:sub(1, 2) == "pt" then
+            return "pt"
+        elseif locale:sub(1, 2) == "fr" then
+            return "fr"
+        elseif locale:sub(1, 2) == "ru" then
+            return "ru"
         end
     end
+    
+    return "en" -- Padrão para inglês
+end
 
-    Players.PlayerAdded:Connect(function(Player)
-        Player.CharacterAdded:Connect(function(v)
-            if v.Name ~= Players.LocalPlayer.Name then 
-                local ESP = Drawing.new("Text")
+-- Definir idioma inicial
+TGSettings.Language = DetectPlayerLanguage()
+TGSettings.UITheme = Themes[TGSettings.Theme]
+
+-- Variáveis globais
+local FOVCircles = {}
+local ActiveTab = "aimbot"
+local Dragging = false
+local DragStart = nil
+local StartPos = nil
+local CurrentLanguage = Languages[TGSettings.Language]
+local CurrentTheme = Themes[TGSettings.Theme]
+local NotificationQueue = {}
+local ActiveNotifications = {}
+
+-- Utilitários
+local function CreateCircle(name, size, color, transparency)
+    if FOVCircles[name] then
+        FOVCircles[name]:Remove()
+    end
     
-                RunService.RenderStepped:Connect(function()
-                    if workspace:FindFirstChild(v.Name) ~= nil and workspace[v.Name]:FindFirstChild("HumanoidRootPart") ~= nil then
-                        local Vector, OnScreen = Camera:WorldToViewportPoint(workspace[v.Name]:WaitForChild("Head", math.huge).Position)
+    local circle = Drawing.new("Circle")
+    circle.Visible = true
+    circle.Radius = size
+    circle.Color = color
+    circle.Transparency = transparency
+    circle.Thickness = 2
+    circle.NumSides = 90
+    circle.Filled = false
+    FOVCircles[name] = circle
     
-                        ESP.Size = _G.TextSize
-                        ESP.Center = _G.Center
-                        ESP.Outline = _G.Outline
-                        ESP.OutlineColor = _G.OutlineColor
-                        ESP.Color = _G.TextColor
-                        ESP.Transparency = _G.TextTransparency
+    -- Criar um círculo interno para efeito visual
+    local innerCircle = Drawing.new("Circle")
+    innerCircle.Visible = true
+    innerCircle.Radius = size - 2
+    innerCircle.Color = color
+    innerCircle.Transparency = transparency * 0.3
+    innerCircle.Thickness = 1
+    innerCircle.NumSides = 90
+    innerCircle.Filled = false
+    FOVCircles[name.."Inner"] = innerCircle
     
-                        if OnScreen == true then
-                            local Part1 = workspace:WaitForChild(v.Name, math.huge):WaitForChild("HumanoidRootPart", math.huge).Position
-                        local Part2 = workspace:WaitForChild(Players.LocalPlayer.Name, math.huge):WaitForChild("HumanoidRootPart", math.huge).Position or 0
-                            local Dist = (Part1 - Part2).Magnitude
-                            ESP.Position = Vector2.new(Vector.X, Vector.Y - 25)
-                            ESP.Text = ("("..tostring(math.floor(tonumber(Dist)))..") "..v.Name.." ["..workspace[v.Name].Humanoid.Health.."]")
-                            if _G.TeamCheck == true then 
-                                if Players.LocalPlayer.Team ~= Player.Team then
-                                    ESP.Visible = _G.ESPVisible
-                                else
-                                    ESP.Visible = false
-                                end
-                            else
-                                ESP.Visible = _G.ESPVisible
-                            end
-                        else
-                            ESP.Visible = false
-                        end
-                    else
-                        ESP.Visible = false
-                    end
-                end)
+    -- Criar um círculo externo para efeito visual
+    local outerCircle = Drawing.new("Circle")
+    outerCircle.Visible = true
+    outerCircle.Radius = size + 2
+    outerCircle.Color = color
+    outerCircle.Transparency = transparency * 0.1
+    outerCircle.Thickness = 1
+    outerCircle.NumSides = 90
+    outerCircle.Filled = false
+    FOVCircles[name.."Outer"] = outerCircle
     
-                Players.PlayerRemoving:Connect(function()
-                    ESP.Visible = false
-                end)
+    return circle
+end
+
+local function UpdateCircle(name, visible, position)
+    if not FOVCircles[name] then return end
+    
+    FOVCircles[name].Visible = visible
+    FOVCircles[name.."Inner"].Visible = visible
+    FOVCircles[name.."Outer"].Visible = visible
+    
+    if position then
+        FOVCircles[name].Position = position
+        FOVCircles[name.."Inner"].Position = position
+        FOVCircles[name.."Outer"].Position = position
+    else
+        local pos = Vector2.new(Mouse.X, Mouse.Y + 36)
+        FOVCircles[name].Position = pos
+        FOVCircles[name.."Inner"].Position = pos
+        FOVCircles[name.."Outer"].Position = pos
+    end
+    
+    -- Animação de pulso
+    if visible then
+        local originalRadius = FOVCircles[name].Radius
+        
+        task.spawn(function()
+            local t = 0
+            while FOVCircles[name] and FOVCircles[name].Visible do
+                t = t + 0.01
+                local pulse = math.sin(t * 2) * 2
+                
+                if FOVCircles[name] then
+                    FOVCircles[name.."Outer"].Radius = originalRadius + 2 + pulse
+                else
+                    break
+                end
+                
+                task.wait(0.01)
             end
         end)
-    end)
+    end
 end
 
-if _G.DefaultSettings == true then
-    _G.TeamCheck = false
-    _G.ESPVisible = true
-    _G.TextColor = Color3.fromRGB(40, 90, 255)
-    _G.TextSize = 14
-    _G.Center = true
-    _G.Outline = false
-    _G.OutlineColor = Color3.fromRGB(0, 0, 0)
-    _G.DisableKey = Enum.KeyCode.Q
-    _G.TextTransparency = 0.75
+local function IsVisible(part)
+    if not TGSettings.AimbotVisibilityCheck and not TGSettings.SilentAimVisibilityCheck then
+        return true
+    end
+    
+    local origin = Camera.CFrame.Position
+    local direction = (part.Position - origin).Unit * 1000
+    
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    
+    local result = workspace:Raycast(origin, direction, raycastParams)
+    
+    return result and result.Instance:IsDescendantOf(part.Parent)
 end
 
-UserInputService.TextBoxFocused:Connect(function()
-    Typing = true
-end)
-
-UserInputService.TextBoxFocusReleased:Connect(function()
-    Typing = false
-end)
-
-UserInputService.InputBegan:Connect(function(Input)
-    if Input.KeyCode == _G.DisableKey and Typing == false then
-        _G.ESPVisible = not _G.ESPVisible
-        
-        if _G.SendNotifications == true then
-            game:GetService("StarterGui"):SetCore("SendNotification",{
-                Title = "Exunys Developer";
-                Text = "The ESP's visibility is now set to "..tostring(_G.ESPVisible)..".";
-                Duration = 5;
-            })
+local function GetRandomTargetPart(character)
+    local targetParts = {"Head", "UpperTorso", "LowerTorso", "HumanoidRootPart"}
+    local validParts = {}
+    
+    for _, partName in ipairs(targetParts) do
+        local part = character:FindFirstChild(partName)
+        if part then
+            table.insert(validParts, part)
         end
     end
-end)
-
-local Success, Errored = pcall(function()
-    CreateESP()
-end)
-
-if Success and not Errored then
-    if _G.SendNotifications == true then
-        game:GetService("StarterGui"):SetCore("SendNotification",{
-            Title = "Exunys Developer";
-            Text = "ESP script has successfully loaded.";
-            Duration = 5;
-        })
+    
+    if #validParts > 0 then
+        return validParts[math.random(1, #validParts)]
     end
-elseif Errored and not Success then
-    if _G.SendNotifications == true then
-        game:GetService("StarterGui"):SetCore("SendNotification",{
-            Title = "Exunys Developer";
-            Text = "ESP script has errored while loading, please check the developer console! (F9)";
-            Duration = 5;
-        })
-    end
-    TestService:Message("The ESP script has errored, please notify Exunys with the following information :")
-    warn(Errored)
-    print("!! IF THE ERROR IS A FALSE POSITIVE (says that a player cannot be found) THEN DO NOT BOTHER !!")
+    
+    return character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart
 end
-   end,
-})
+
+-- Função para criar efeitos de partículas
+local function CreateParticleEffect(parent, color, size, lifetime)
+    local attachment = Instance.new("Attachment")
+    attachment.Parent = parent
+    
+    local particles = Instance.new("ParticleEmitter")
+    particles.Texture = "rbxassetid://241629053" -- Partícula circular
+    particles.Color = ColorSequence.new(color)
+    particles.Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, size * 0.5),
+        NumberSequenceKeypoint.new(0.5, size),
+        NumberSequenceKeypoint.new(1, size * 0.5)
+    })
+    particles.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.5),
+        NumberSequenceKeypoint.new(0.8, 0.75),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    particles.Lifetime = NumberRange.new(lifetime, lifetime * 1.5)
+    particles.Speed = NumberRange.new(0, 1)
+    particles.SpreadAngle = Vector2.new(180, 180)
+    particles.Rate = 50
+    particles.Rotation = NumberRange.new(0, 360)
+    particles.RotSpeed = NumberRange.new(-30, 30)
+    particles.Parent = attachment
+    
+    -- Emitir partículas por um curto período
+    particles:Emit(10)
+    
+    -- Remover após o tempo de vida
+    task.delay(lifetime * 2, function()
+        particles.Enabled = false
+        game:GetService("Debris"):AddItem(attachment, 1)
+    end)
+    
+    return particles
+end
+
+-- Interface do usuário para o TG Menu
+local function CreateTGMenuGUI()
+    -- Remover GUI existente se houver
+    if game:GetService("CoreGui"):FindFirstChild("TGMenuGUI") then
+        game:GetService("CoreGui"):FindFirstChild("TGMenuGUI"):Destroy()
+    end
+    
+    -- Atualizar variáveis de idioma e tema
+    CurrentLanguage = Languages[TGSettings.Language]
+    CurrentTheme = Themes[TGSettings.Theme]
+    
+    -- Criar nova GUI
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "TGMenuGUI"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    -- Verificar se o DisplayOrder é suportado
+    pcall(function()
+        ScreenGui.DisplayOrder = 999
+    end)
+    
+    -- Verificar se o IgnoreGuiInset é suportado
+    pcall(function()
+        ScreenGui.IgnoreGuiInset = true
+    end)
+    
+    -- Usar CoreGui para executores
+    pcall(function()
+        ScreenGui.Parent = game:GetService("CoreGui")
+    end)
+    
+    -- Frame principal com efeito de blur
+    local BlurEffect = Instance.new("BlurEffect")
+    BlurEffect.Size = 0
+    BlurEffect.Parent = game:GetService("Lighting")
+    
+    -- Animar o blur ao abrir
+    TweenService:Create(BlurEffect, TweenInfo.new(0.5), {Size = 10}):Play()
+    
+    -- Frame principal
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 650, 0, 450)
+    MainFrame.Position = UDim2.new(0.5, -325, 0.5, -225)
+    MainFrame.BackgroundColor3 = CurrentTheme.Background
+    MainFrame.BorderSizePixel = 0
+    MainFrame.ClipsDescendants = true
+    MainFrame.Active = true
+    MainFrame.Draggable = false -- Vamos implementar nosso próprio sistema de arrasto
+    MainFrame.Parent = ScreenGui
+    
+    -- Arredondamento das bordas
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.Parent = MainFrame
+    
+    -- Sombra
+    local Shadow = Instance.new("ImageLabel")
+    Shadow.Name = "Shadow"
+    Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+    Shadow.BackgroundTransparency = 1
+    Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+    Shadow.Size = UDim2.new(1, 40, 1, 40)
+    Shadow.ZIndex = -1
+    Shadow.Image = "rbxassetid://5554236805"
+    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    Shadow.ImageTransparency = 0.6
+    Shadow.ScaleType = Enum.ScaleType.Slice
+    Shadow.SliceCenter = Rect.new(23, 23, 277, 277)
+    Shadow.Parent = MainFrame
+    
+    -- Barra superior
+    local TopBar = Instance.new("Frame")
+    TopBar.Name = "TopBar"
+    TopBar.Size = UDim2.new(1, 0, 0, 40)
+    TopBar.BackgroundColor3 = TGSettings.UITheme.Border
+    TopBar.BorderSizePixel = 0
+    TopBar.Parent = MainFrame
+    
+    local TopBarCorner = Instance.new("UICorner")
+    TopBarCorner.CornerRadius = UDim.new(0, 8)
+    TopBarCorner.Parent = TopBar
+    
+    local TopBarBottom = Instance.new("Frame")
+    TopBarBottom.Name = "TopBarBottom"
+    TopBarBottom.Size = UDim2.new(1, 0, 0, 10)
+    TopBarBottom.Position = UDim2.new(0, 0, 1, -10)
+    TopBarBottom.BackgroundColor3 = TGSettings.UITheme.Border
+    TopBarBottom.BorderSizePixel = 0
+    TopBarBottom.ZIndex = 0
+    TopBarBottom.Parent = TopBar
+    
+    -- Título
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Size = UDim2.new(0, 200, 1, 0)
+    Title.Position = UDim2.new(0, 15, 0, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = "TG Menu"
+    Title.TextColor3 = TGSettings.UITheme.Accent
+    Title.TextSize = 22
+    Title.Font = Enum.Font.GothamBold
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = TopBar
+    
+    -- Versão
+    local Version = Instance.new("TextLabel")
+    Version.Name = "Version"
+    Version.Size = UDim2.new(0, 100, 1, 0)
+    Version.Position = UDim2.new(0, 130, 0, 0)
+    Version.BackgroundTransparency = 1
+    Version.Text = "v1.0"
+    Version.TextColor3 = TGSettings.UITheme.Text
+    Version.TextSize = 14
+    Version.Font = Enum.Font.Gotham
+    Version.TextXAlignment = Enum.TextXAlignment.Left
+    Version.TextTransparency = 0.4
+    Version.Parent = TopBar
+    
+    -- Botão de fechar
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Name = "CloseButton"
+    CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    CloseButton.Position = UDim2.new(1, -40, 0, 5)
+    CloseButton.BackgroundColor3 = TGSettings.UITheme.Danger
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.TextSize = 16
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.Parent = TopBar
+    
+    local CloseButtonCorner = Instance.new("UICorner")
+    CloseButtonCorner.CornerRadius = UDim.new(0, 6)
+    CloseButtonCorner.Parent = CloseButton
+    
+    CloseButton.MouseButton1Click:Connect(function()
+        ScreenGui.Enabled = false
+    end)
+    
+    -- Botão de minimizar
+    local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Name = "MinimizeButton"
+    MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+    MinimizeButton.Position = UDim2.new(1, -80, 0, 5)
+    MinimizeButton.BackgroundColor3 = TGSettings.UITheme.Warning
+    MinimizeButton.Text = "-"
+    MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    MinimizeButton.TextSize = 20
+    MinimizeButton.Font = Enum.Font.GothamBold
+    MinimizeButton.Parent = TopBar
+    
+    local MinimizeButtonCorner = Instance.new("UICorner")
+    MinimizeButtonCorner.CornerRadius = UDim.new(0, 6)
+    MinimizeButtonCorner.Parent = MinimizeButton
+    
+    local minimized = false
+    MinimizeButton.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        if minimized then
+            local targetSize = UDim2.new(0, 600, 0, 40)
+            local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = targetSize})
+            tween:Play()
+        else
+            local targetSize = UDim2.new(0, 600, 0, 400)
+            local tween = TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = targetSize})
+            tween:Play()
+        end
+    end)
+    
+    -- Sistema de arrasto personalizado
+    TopBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            Dragging = true
+            DragStart = input.Position
+            StartPos = MainFrame.Position
+        end
+    end)
+    
+    TopBar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            Dragging = false
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement and Dragging then
+            local delta = input.Position - DragStart
+            MainFrame.Position = UDim2.new(
+                StartPos.X.Scale,
+                StartPos.X.Offset + delta.X,
+                StartPos.Y.Scale,
+                StartPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+    
+    -- Barra lateral
+    local SideBar = Instance.new("Frame")
+    SideBar.Name = "SideBar"
+    SideBar.Size = UDim2.new(0, 150, 1, -40)
+    SideBar.Position = UDim2.new(0, 0, 0, 40)
+    SideBar.BackgroundColor3 = TGSettings.UITheme.Border
+    SideBar.BorderSizePixel = 0
+    SideBar.Parent = MainFrame
+    
+    -- Conteúdo principal
+    local ContentFrame = Instance.new("Frame")
+    ContentFrame.Name = "ContentFrame"
+    ContentFrame.Size = UDim2.new(1, -150, 1, -40)
+    ContentFrame.Position = UDim2.new(0, 150, 0, 40)
+    ContentFrame.BackgroundColor3 = TGSettings.UITheme.Background
+    ContentFrame.BorderSizePixel = 0
+    ContentFrame.Parent = MainFrame
+    
+    -- Função para criar botões da barra lateral
+    local function CreateTabButton(name, position, icon)
+        local TabButton = Instance.new("TextButton")
+        TabButton.Name = name .. "Button"
+        TabButton.Size = UDim2.new(1, -20, 0, 36)
+        TabButton.Position = UDim2.new(0, 10, 0, position)
+        TabButton.BackgroundColor3 = (ActiveTab == name) and TGSettings.UITheme.Accent or TGSettings.UITheme.Border
+        TabButton.Text = name
+        TabButton.TextColor3 = TGSettings.UITheme.Text
+        TabButton.TextSize = 14
+        TabButton.Font = Enum.Font.GothamSemibold
+        TabButton.Parent = SideBar
+        
+        local TabButtonCorner = Instance.new("UICorner")
+        TabButtonCorner.CornerRadius = UDim.new(0, 6)
+        TabButtonCorner.Parent = TabButton
+        
+        if icon then
+            local Icon = Instance.new("ImageLabel")
+            Icon.Name = "Icon"
+            Icon.Size = UDim2.new(0, 20, 0, 20)
+            Icon.Position = UDim2.new(0, 10, 0.5, -10)
+            Icon.BackgroundTransparency = 1
+            Icon.Image = icon
+            Icon.Parent = TabButton
+            
+            TabButton.TextXAlignment = Enum.TextXAlignment.Right
+            TabButton.TextOffset = Vector2.new(-10, 0)
+        end
+        
+        TabButton.MouseButton1Click:Connect(function()
+            ActiveTab = name
+            
+            -- Atualizar cores dos botões
+            for _, button in pairs(SideBar:GetChildren()) do
+                if button:IsA("TextButton") then
+                    button.BackgroundColor3 = (button.Name == name .. "Button") and TGSettings.UITheme.Accent or TGSettings.UITheme.Border
+                end
+            end
+            
+            -- Mostrar apenas o painel ativo
+            for _, panel in pairs(ContentFrame:GetChildren()) do
+                if panel:IsA("ScrollingFrame") then
+                    panel.Visible = (panel.Name == name .. "Panel")
+                end
+            end
+        end)
+        
+        return TabButton
+    end
+    
+    -- Função para criar painéis de conteúdo
+    local function CreateContentPanel(name)
+        local Panel = Instance.new("ScrollingFrame")
+        Panel.Name = name .. "Panel"
+        Panel.Size = UDim2.new(1, 0, 1, 0)
+        Panel.BackgroundTransparency = 1
+        Panel.BorderSizePixel = 0
+        Panel.ScrollBarThickness = 4
+        Panel.ScrollBarImageColor3 = TGSettings.UITheme.Accent
+        Panel.Visible = (ActiveTab == name)
+        Panel.Parent = ContentFrame
+        
+        local PanelLayout = Instance.new("UIListLayout")
+        PanelLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        PanelLayout.Padding = UDim.new(0, 10)
+        PanelLayout.Parent = Panel
+        
+        local PanelPadding = Instance.new("UIPadding")
+        PanelPadding.PaddingLeft = UDim.new(0, 15)
+        PanelPadding.PaddingRight = UDim.new(0, 15)
+        PanelPadding.PaddingTop = UDim.new(0, 15)
+        PanelPadding.PaddingBottom = UDim.new(0, 15)
+        PanelPadding.Parent = Panel
+        
+        return Panel
+    end
+    
+    -- Função para criar seções nos painéis
+    local function CreateSection(panel, title)
+        local Section = Instance.new("Frame")
+        Section.Name = title .. "Section"
+        Section.Size = UDim2.new(1, 0, 0, 30) -- Tamanho inicial, será ajustado automaticamente
+        Section.BackgroundColor3 = TGSettings.UITheme.Border
+        Section.BorderSizePixel = 0
+        Section.LayoutOrder = #panel:GetChildren()
+        Section.Parent = panel
+        
+        local SectionCorner = Instance.new("UICorner")
+        SectionCorner.CornerRadius = UDim.new(0, 6)
+        SectionCorner.Parent = Section
+        
+        local SectionTitle = Instance.new("TextLabel")
+        SectionTitle.Name = "Title"
+        SectionTitle.Size = UDim2.new(1, -20, 0, 30)
+        SectionTitle.Position = UDim2.new(0, 10, 0, 0)
+        SectionTitle.BackgroundTransparency = 1
+        SectionTitle.Text = title
+        SectionTitle.TextColor3 = TGSettings.UITheme.Accent
+        SectionTitle.TextSize = 16
+        SectionTitle.Font = Enum.Font.GothamBold
+        SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+        SectionTitle.Parent = Section
+        
+        local ContentFrame = Instance.new("Frame")
+        ContentFrame.Name = "Content"
+        ContentFrame.Size = UDim2.new(1, -20, 1, -40)
+        ContentFrame.Position = UDim2.new(0, 10, 0, 30)
+        ContentFrame.BackgroundTransparency = 1
+        ContentFrame.Parent = Section
+        
+        local ContentLayout = Instance.new("UIListLayout")
+        ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        ContentLayout.Padding = UDim.new(0, 8)
+        ContentLayout.Parent = ContentFrame
+        
+        -- Ajustar tamanho da seção automaticamente
+        ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Section.Size = UDim2.new(1, 0, 0, ContentLayout.AbsoluteContentSize.Y + 40)
+        end)
+        
+        return Section, ContentFrame
+    end
+    
+    -- Função para criar toggle
+    local function CreateToggle(parent, name, default, callback)
+        local Toggle = Instance.new("Frame")
+        Toggle.Name = name .. "Toggle"
+        Toggle.Size = UDim2.new(1, 0, 0, 30)
+        Toggle.BackgroundTransparency = 1
+        Toggle.LayoutOrder = #parent:GetChildren()
+        Toggle.Parent = parent
+        
+        local ToggleLabel = Instance.new("TextLabel")
+        ToggleLabel.Name = "Label"
+        ToggleLabel.Size = UDim2.new(1, -60, 1, 0)
+        ToggleLabel.BackgroundTransparency = 1
+        ToggleLabel.Text = name
+        ToggleLabel.TextColor3 = TGSettings.UITheme.Text
+        ToggleLabel.TextSize = 14
+        ToggleLabel.Font = Enum.Font.Gotham
+        ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        ToggleLabel.Parent = Toggle
+        
+        local ToggleButton = Instance.new("Frame")
+        ToggleButton.Name = "Button"
+        ToggleButton.Size = UDim2.new(0, 44, 0, 22)
+        ToggleButton.Position = UDim2.new(1, -50, 0.5, -11)
+        ToggleButton.BackgroundColor3 = default and TGSettings.UITheme.Success or TGSettings.UITheme.Border
+        ToggleButton.Parent = Toggle
+        
+        local ToggleButtonCorner = Instance.new("UICorner")
+        ToggleButtonCorner.CornerRadius = UDim.new(1, 0)
+        ToggleButtonCorner.Parent = ToggleButton
+        
+        local ToggleCircle = Instance.new("Frame")
+        ToggleCircle.Name = "Circle"
+        ToggleCircle.Size = UDim2.new(0, 18, 0, 18)
+        ToggleCircle.Position = UDim2.new(default and 1 or 0, default and -20 or 2, 0.5, -9)
+        ToggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        ToggleCircle.Parent = ToggleButton
+        
+        local ToggleCircleCorner = Instance.new("UICorner")
+        ToggleCircleCorner.CornerRadius = UDim.new(1, 0)
+        ToggleCircleCorner.Parent = ToggleCircle
+        
+        local enabled = default
+        
+        local function UpdateToggle()
+            enabled = not enabled
+            
+            local targetPosition = enabled and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+            local targetColor = enabled and TGSettings.UITheme.Success or TGSettings.UITheme.Border
+            
+            local positionTween = TweenService:Create(ToggleCircle, TweenInfo.new(0.2), {Position = targetPosition})
+            local colorTween = TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = targetColor})
+            
+            positionTween:Play()
+            colorTween:Play()
+            
+            callback(enabled)
+        end
+        
+        -- Tornar toda a área clicável
+        local ToggleClickArea = Instance.new("TextButton")
+        ToggleClickArea.Name = "ClickArea"
+        ToggleClickArea.Size = UDim2.new(1, 0, 1, 0)
+        ToggleClickArea.BackgroundTransparency = 1
+        ToggleClickArea.Text = ""
+        ToggleClickArea.Parent = Toggle
+        
+        ToggleClickArea.MouseButton1Click:Connect(UpdateToggle)
+        
+        return Toggle, enabled
+    end
+    
+    -- Função para criar slider
+    local function CreateSlider(parent, name, min, max, default, suffix, callback)
+        local Slider = Instance.new("Frame")
+        Slider.Name = name .. "Slider"
+        Slider.Size = UDim2.new(1, 0, 0, 50)
+        Slider.BackgroundTransparency = 1
+        Slider.LayoutOrder = #parent:GetChildren()
+        Slider.Parent = parent
+        
+        local SliderLabel = Instance.new("TextLabel")
+        SliderLabel.Name = "Label"
+        SliderLabel.Size = UDim2.new(1, 0, 0, 20)
+        SliderLabel.BackgroundTransparency = 1
+        SliderLabel.Text = name
+        SliderLabel.TextColor3 = TGSettings.UITheme.Text
+        SliderLabel.TextSize = 14
+        SliderLabel.Font = Enum.Font.Gotham
+        SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+        SliderLabel.Parent = Slider
+        
+        local SliderValue = Instance.new("TextLabel")
+        SliderValue.Name = "Value"
+        SliderValue.Size = UDim2.new(0, 50, 0, 20)
+        SliderValue.Position = UDim2.new(1, -50, 0, 0)
+        SliderValue.BackgroundTransparency = 1
+        SliderValue.Text = tostring(default) .. (suffix or "")
+        SliderValue.TextColor3 = TGSettings.UITheme.Accent
+        SliderValue.TextSize = 14
+        SliderValue.Font = Enum.Font.GothamBold
+        SliderValue.TextXAlignment = Enum.TextXAlignment.Right
+        SliderValue.Parent = Slider
+        
+        local SliderBar = Instance.new("Frame")
+        SliderBar.Name = "Bar"
+        SliderBar.Size = UDim2.new(1, 0, 0, 6)
+        SliderBar.Position = UDim2.new(0, 0, 0, 30)
+        SliderBar.BackgroundColor3 = TGSettings.UITheme.Border
+        SliderBar.Parent = Slider
+        
+        local SliderBarCorner = Instance.new("UICorner")
+        SliderBarCorner.CornerRadius = UDim.new(1, 0)
+        SliderBarCorner.Parent = SliderBar
+        
+        local SliderFill = Instance.new("Frame")
+        SliderFill.Name = "Fill"
+        SliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+        SliderFill.BackgroundColor3 = TGSettings.UITheme.Accent
+        SliderFill.Parent = SliderBar
+        
+        local SliderFillCorner = Instance.new("UICorner")
+        SliderFillCorner.CornerRadius = UDim.new(1, 0)
+        SliderFillCorner.Parent = SliderFill
+        
+        local SliderButton = Instance.new("TextButton")
+        SliderButton.Name = "Button"
+        SliderButton.Size = UDim2.new(0, 16, 0, 16)
+        SliderButton.Position = UDim2.new((default - min) / (max - min), -8, 0, -5)
+        SliderButton.BackgroundColor3 = TGSettings.UITheme.Accent
+        SliderButton.Text = ""
+        SliderButton.Parent = SliderBar
+        
+        local SliderButtonCorner = Instance.new("UICorner")
+        SliderButtonCorner.CornerRadius = UDim.new(1, 0)
+        SliderButtonCorner.Parent = SliderButton
+        
+        local value = default
+        
+        local function UpdateSlider(input)
+            local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+            local newValue = math.floor(min + (max - min) * pos)
+            
+            if newValue ~= value then
+                value = newValue
+                SliderValue.Text = tostring(value) .. (suffix or "")
+                SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+                SliderButton.Position = UDim2.new(pos, -8, 0, -5)
+                callback(value)
+            end
+        end
+        
+        SliderButton.MouseButton1Down:Connect(function()
+            local connection
+            connection = RunService.RenderStepped:Connect(function()
+                local mousePos = UserInputService:GetMouseLocation()
+                local input = {Position = Vector3.new(mousePos.X, mousePos.Y, 0)}
+                UpdateSlider(input)
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    connection:Disconnect()
+                end
+            end)
+        end)
+        
+        return Slider
+    end
+end
